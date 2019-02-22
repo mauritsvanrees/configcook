@@ -55,5 +55,10 @@ setup(
     zip_safe=True,
     install_requires=['setuptools', 'six'],
     extras_require={},
-    entry_points={'console_scripts': ['configcook = configcook.cli:main']},
+    entry_points={
+        'console_scripts': ['configcook = configcook.cli:main'],
+        'configcook.extension': [
+            'configcook.extensions.example = configcook.extensions:ExampleExtension'
+        ],
+    },
 )

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from .config import parse_config
 import logging
+import pkg_resources
 import sys
 
 
@@ -26,9 +27,9 @@ class ConfigCook(object):
             sys.exit(1)
         logger.debug('configcook in sections.')
         if 'extensions' in self.config.options('configcook'):
-            self.extensions = self.config.get('configcook', 'extensions').split()
+            self._extension_names = self.config.get('configcook', 'extensions').split()
             logger.debug(
-                'extensions in configcook section: %s', self.extensions
+                'extensions in configcook section: %s', self._extension_names
             )
             self._load_extensions()
 
@@ -36,5 +37,24 @@ class ConfigCook(object):
 
     def _load_extensions(self):
         logger.debug('Loading extensions.')
-        for extension in self.extensions:
-            logger.warning('TODO: find and load extension %s', extension)
+        group = 'configcook.extension'
+        entrypoints = list(pkg_resources.iter_entry_points(group=group))
+        if not entrypoints:
+            logger.error('No entrypoints have been registered for %s.', group)
+            return
+
+        for extension_name in self._extension_names:
+            extension = None
+            # Grab the function or class that is the actual plugin.
+            for entrypoint in entrypoints:
+                if entrypoint.name == extension_name:
+                    logger.debug('Found entry point for extension %s.', extension_name)
+                    break
+            else:
+                logger.error('Could not find entry point for extension %s.', extension_name)
+                sys.exit(1)
+            # Instantiate the extension.
+            # TODO: we probably want to pass something, like self.config.
+            extension = entrypoint.load()
+            logger.debug('Loaded extension %s.', extension_name)
+            self.extensions.append(extension)
