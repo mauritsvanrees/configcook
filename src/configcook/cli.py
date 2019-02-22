@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from .main import ConfigCook
 from argparse import ArgumentParser
 import logging
 
@@ -31,4 +32,5 @@ def main():
                     format="%(levelname)s: %(message)s")
     logger.debug('Only shown when --verbose is used.')
     logger.info('Hello, I will be your config cook today.')
-    return
+    cook = ConfigCook(options)
+    cook()
