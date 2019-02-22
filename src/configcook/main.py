@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from .config import parse_config
 import logging
+import sys
 
 
 logger = logging.getLogger(__name__)
@@ -20,14 +21,16 @@ class ConfigCook(object):
         logger.debug('Reading config.')
         self.config = parse_config('cc.cfg')
         logger.debug('Sections: %s', self.config.sections())
-        if 'configcook' in self.config.sections():
-            logger.debug('configcook in sections.')
-            if 'extensions' in self.config.options('configcook'):
-                self.extensions = self.config.get('configcook', 'extensions').split()
-                logger.debug(
-                    'extensions in configcook section: %s', self.extensions
-                )
-                self._load_extensions()
+        if 'configcook' not in self.config.sections():
+            logger.error("Section 'configcook' missing from config file.")
+            sys.exit(1)
+        logger.debug('configcook in sections.')
+        if 'extensions' in self.config.options('configcook'):
+            self.extensions = self.config.get('configcook', 'extensions').split()
+            logger.debug(
+                'extensions in configcook section: %s', self.extensions
+            )
+            self._load_extensions()
 
         logger.debug('End of ConfigCook call.')
 
