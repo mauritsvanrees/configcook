@@ -27,7 +27,9 @@ class ConfigCook(object):
             sys.exit(1)
         logger.debug('configcook in sections.')
         if 'extensions' in self.config.options('configcook'):
-            self._extension_names = self.config.get('configcook', 'extensions').split()
+            self._extension_names = self.config.get(
+                'configcook', 'extensions'
+            ).split()
             logger.debug(
                 'extensions in configcook section: %s', self._extension_names
             )
@@ -48,10 +50,15 @@ class ConfigCook(object):
             # Grab the function or class that is the actual plugin.
             for entrypoint in entrypoints:
                 if entrypoint.name == extension_name:
-                    logger.debug('Found entry point for extension %s.', extension_name)
+                    logger.debug(
+                        'Found entry point for extension %s.', extension_name
+                    )
                     break
             else:
-                logger.error('Could not find entry point for extension %s.', extension_name)
+                logger.error(
+                    'Could not find entry point for extension %s.',
+                    extension_name,
+                )
                 sys.exit(1)
             # Instantiate the extension.
             # TODO: we probably want to pass something, like self.config.
