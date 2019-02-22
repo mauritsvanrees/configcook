@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigCook(object):
-
     def __init__(self, options):
         self.options = options
         logger.debug('Initialized ConfigCook.')

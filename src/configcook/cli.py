@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from .main import ConfigCook
 from argparse import ArgumentParser
+
 import logging
 
 
@@ -15,11 +16,11 @@ def parse_options():
         action="store_true",
         dest="verbose",
         default=False,
-        help="Verbose mode")
+        help="Verbose mode",
+    )
 
     options = parser.parse_args()
     return options
-
 
 
 def main():
@@ -28,8 +29,7 @@ def main():
         loglevel = logging.DEBUG
     else:
         loglevel = logging.INFO
-    logging.basicConfig(level=loglevel,
-                    format="%(levelname)s: %(message)s")
+    logging.basicConfig(level=loglevel, format="%(levelname)s: %(message)s")
     logger.debug('Only shown when --verbose is used.')
     logger.info('Hello, I will be your config cook today.')
     cook = ConfigCook(options)
