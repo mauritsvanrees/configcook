@@ -1,0 +1,9 @@
+*.egg-info
+*.pyc
+*.pyo
+bin/
+build/
+dist/
+lib-python/
+lib_pypy/
+site-packages/
