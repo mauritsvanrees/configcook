@@ -15,6 +15,8 @@ class ConfigCook(object):
         self.extensions = []
         self.recipes = []
         self.config = None
+        self._extension_names = []
+        self._part_names = []
         logger.debug('Initialized ConfigCook.')
 
     def __call__(self):
@@ -36,6 +38,27 @@ class ConfigCook(object):
                 'extensions in configcook section: %s', self._extension_names
             )
             self._load_extensions()
+            # TODO: let extensions do something.
+
+        # Do we want all parts/sections/recipes?
+        if 'parts' in self.config.options('configcook'):
+            parts = self.config.get(
+                'configcook', 'parts'
+            ).split()
+        else:
+            logger.error('Missing parts option in configcook section.')
+            sys.exit(1)
+        for part in parts:
+            if part not in self.config.sections():
+                logger.error(
+                    '[configcook] parts option has %s, '
+                    'but this is missing from the sections.',
+                    part,
+                )
+                sys.exit(1)
+            self._part_names.append(part)
+            self._load_part(part)
+            # TODO: let recipes do something.
 
         logger.debug('End of ConfigCook call.')
 
@@ -57,9 +80,11 @@ class ConfigCook(object):
         logger.debug('Loading extension %s.', name)
         # This will either find an entrypoint or sys.exit(1).
         entrypoint = self._find_extension_entrypoint(name)
+        # Load the entrypoint class.
+        extension_class = entrypoint.load()
         # Instantiate the extension.
         # TODO: we probably want to pass something, like self.config.
-        extension = entrypoint.load()
+        extension = extension_class()
         logger.info('Loaded extension %s.', name)
         self.extensions.append(extension)
 
@@ -133,3 +158,25 @@ class ConfigCook(object):
         """
         group = 'configcook.recipe'
         return self._find_entrypoint(group, name)
+
+    def _load_recipe(self, name):
+        logger.debug('Loading recipe %s.', name)
+        # This will either find an entrypoint or sys.exit(1).
+        entrypoint = self._find_recipe_entrypoint(name)
+        # Load the entrypoint class.
+        recipe_class = entrypoint.load()
+        # Instantiate the recipe.
+        # TODO: we probably want to pass something, like self.config
+        # or the part name or options.  Maybe do this in _load_part.
+        recipe = recipe_class()
+        logger.info('Loaded recipe %s.', name)
+        self.recipes.append(recipe)
+        return recipe
+
+    def _load_part(self, name):
+        options = self.config.options(name)
+        if 'recipe' not in options:
+            logger.error('recipe option missing from %s section', name)
+            sys.exit(1)
+        recipe_name = self.config.get(name, 'recipe')
+        recipe = self._load_recipe(recipe_name)
