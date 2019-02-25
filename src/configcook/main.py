@@ -49,38 +49,36 @@ class ConfigCook(object):
 
     def _load_extensions(self):
         logger.debug('Loading extensions.')
-        for extension_name in self._extension_names:
-            self._load_extension(extension_name)
+        for name in self._extension_names:
+            self._load_extension(name)
         logger.debug('Loaded extensions.')
 
-    def _load_extension(self, extension_name):
-        logger.debug('Loading extension %s.', extension_name)
+    def _load_extension(self, name):
+        logger.debug('Loading extension %s.', name)
         # This will either find an entrypoint or sys.exit(1).
-        entrypoint = self._find_entrypoint(extension_name)
+        entrypoint = self._find_extension_entrypoint(name)
         # Instantiate the extension.
         # TODO: we probably want to pass something, like self.config.
         extension = entrypoint.load()
-        logger.info('Loaded extension %s.', extension_name)
+        logger.info('Loaded extension %s.', name)
         self.extensions.append(extension)
 
-    def _find_entrypoint(self, extension_name, install=True):
-        """Find an entry point for this extension.
+    def _find_entrypoint(self, group, name, install=True):
+        """Find an entry point for this extension or recipe.
 
-        When install=True, we can try a pip install.
+        - group is the entrypoint group: 'configcook.extension/recipe'
+        - name is the entrypoint name: 'package.name', or
+         'package.name:special' if a package has more than one entrypoint.
+        - When install=True, we can try a pip install.
         """
-        logger.debug(
-            'Searching entry point for extension  %s.', extension_name
-        )
-        group = 'configcook.extension'
+        logger.debug('Searching %s entrypoint with name %s.', group, name)
         for entrypoint in pkg_resources.iter_entry_points(group=group):
-            if entrypoint.name == extension_name:
-                logger.debug(
-                    'Found entry point for extension %s.', extension_name
-                )
+            if entrypoint.name == name:
+                logger.debug('Found %s entrypoint with name %s.', group, name)
                 return entrypoint
         # Check if package is installed.
-        # We probably want to support both package and package:name.
-        package_name = extension_name.split(':')[0]
+        # We support both package and package:name.
+        package_name = name.split(':')[0]
         try:
             pkg_resources.get_distribution(package_name)
         except pkg_resources.DistributionNotFound:
@@ -93,18 +91,22 @@ class ConfigCook(object):
                 'with name %s.',
                 package_name,
                 group,
-                extension_name,
+                name,
             )
             sys.exit(1)
         if not install:
+            # We either do not want to allow installing at all, or this is
+            # the second time we are called, and it has not helped.
             logger.error(
-                'We cannot install an entry point for extension %s.',
-                extension_name,
+                'We cannot install a package %s to find a '
+                '%s entrypoint with name %s.',
+                package_name,
+                group,
+                name,
             )
             sys.exit(1)
         logger.debug(
-            'We do not yet have an entry point for extension %s.',
-            extension_name,
+            'We do not yet have a %s entrypoint with name %s.', group, name
         )
         logger.info('Trying to install package %s.', package_name)
         # TODO: catch error in this command.
@@ -112,8 +114,22 @@ class ConfigCook(object):
         print(result)
         # Retry, but this time do not allow to install.
         logger.info(
-            'Retrying searching for entry point for extension %s after install of %s.',
-            extension_name,
+            'Retrying searching for %s entrypoint with name %s '
+            'after install of package %s.',
+            group,
+            name,
             package_name,
         )
-        return self._find_entrypoint(extension_name, install=False)
+        return self._find_entrypoint(group, name, install=False)
+
+    def _find_extension_entrypoint(self, name):
+        """Find an entry point for this extension.
+        """
+        group = 'configcook.extension'
+        return self._find_entrypoint(group, name)
+
+    def _find_recipe_entrypoint(self, name):
+        """Find an entry point for this recipe.
+        """
+        group = 'configcook.recipe'
+        return self._find_entrypoint(group, name)
