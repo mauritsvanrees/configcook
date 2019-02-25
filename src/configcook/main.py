@@ -78,6 +78,24 @@ class ConfigCook(object):
                     'Found entry point for extension %s.', extension_name
                 )
                 return entrypoint
+        # Check if package is installed.
+        # We probably want to support both package and package:name.
+        package_name = extension_name.split(':')[0]
+        try:
+            pkg_resources.get_distribution(package_name)
+        except pkg_resources.DistributionNotFound:
+            # We do not have the package yet.  We can try to install it.
+            pass
+        else:
+            # TODO: check dist.version.
+            logger.error(
+                'We have package %s but could not find a %s entrypoint '
+                'with name %s.',
+                package_name,
+                group,
+                extension_name,
+            )
+            sys.exit(1)
         if not install:
             logger.error(
                 'We cannot install an entry point for extension %s.',
@@ -88,8 +106,6 @@ class ConfigCook(object):
             'We do not yet have an entry point for extension %s.',
             extension_name,
         )
-        # We probably want to support package:name.
-        package_name = extension_name.split(':')[0]
         logger.info('Trying to install package %s.', package_name)
         # TODO: catch error in this command.
         result = self._pip('install', package_name)
