@@ -24,32 +24,32 @@ class ConfigCook(object):
 
         logger.debug('Reading config.')
         self.config = parse_config('cc.cfg')
-        logger.debug('Sections: %s', self.config.sections())
-        if 'configcook' not in self.config.sections():
+        logger.debug('Sections: %s', ', '.join(self.config.keys()))
+        if 'configcook' not in self.config:
             logger.error("Section 'configcook' missing from config file.")
             sys.exit(1)
         logger.debug('configcook in sections.')
         # We could do self._pip('freeze') here as start to see what we have got.
-        if 'extensions' in self.config.options('configcook'):
-            self._extension_names = self.config.get(
-                'configcook', 'extensions'
-            ).split()
+        ccc = self.config['configcook']
+        if 'extensions' in ccc:
+            self._extension_names = self.config['configcook'][
+                'extensions'
+            ].split()
             logger.debug(
-                'extensions in configcook section: %s', self._extension_names
+                'extensions in configcook section: %s',
+                ', '.join(self._extension_names),
             )
             self._load_extensions()
             # TODO: let extensions do something.
 
         # Do we want all parts/sections/recipes?
-        if 'parts' in self.config.options('configcook'):
-            parts = self.config.get(
-                'configcook', 'parts'
-            ).split()
+        if 'parts' in ccc:
+            parts = ccc['parts'].split()
         else:
             logger.error('Missing parts option in configcook section.')
             sys.exit(1)
         for part in parts:
-            if part not in self.config.sections():
+            if part not in self.config:
                 logger.error(
                     '[configcook] parts option has %s, '
                     'but this is missing from the sections.',
@@ -174,9 +174,9 @@ class ConfigCook(object):
         return recipe
 
     def _load_part(self, name):
-        options = self.config.options(name)
+        options = self.config[name]
         if 'recipe' not in options:
             logger.error('recipe option missing from %s section', name)
             sys.exit(1)
-        recipe_name = self.config.get(name, 'recipe')
+        recipe_name = options['recipe']
         recipe = self._load_recipe(recipe_name)
