@@ -2,8 +2,9 @@
 class BaseExtension(object):
     """Base cookconfig extension."""
 
-    def __init__(self, extension_name, **options):
-        self.extension_name = extension_name
+    def __init__(self, name, config, options):
+        self.name = name
+        self.config = config
         self.options = options
 
 

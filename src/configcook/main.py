@@ -81,7 +81,7 @@ class ConfigCook(object):
         for name in self._extension_names:
             extension_class = self._load_extension(name)
             # Instantiate the extension.
-            extension = extension_class(name, **options)
+            extension = extension_class(name, self.config, options)
             logger.info('Loaded extension %s.', name)
             self.extensions.append(extension)
         logger.debug('Loaded extensions.')
@@ -183,6 +183,6 @@ class ConfigCook(object):
         recipe_name = options['recipe']
         recipe_class = self._load_recipe(recipe_name)
         # Instantiate the recipe.
-        recipe = recipe_class(name, **options)
+        recipe = recipe_class(name, self.config, options)
         logger.info('Loaded part %s with recipe %s.', name, recipe_name)
         self.recipes.append(recipe)
