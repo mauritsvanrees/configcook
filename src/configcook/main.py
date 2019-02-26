@@ -76,8 +76,14 @@ class ConfigCook(object):
 
     def _load_extensions(self):
         logger.debug('Loading extensions.')
+        # All extensions use the options from configcook.
+        options = self.config['configcook']
         for name in self._extension_names:
-            self._load_extension(name)
+            extension_class = self._load_extension(name)
+            # Instantiate the extension.
+            extension = extension_class(name, **options)
+            logger.info('Loaded extension %s.', name)
+            self.extensions.append(extension)
         logger.debug('Loaded extensions.')
 
     def _load_extension(self, name):
@@ -86,11 +92,8 @@ class ConfigCook(object):
         entrypoint = self._find_extension_entrypoint(name)
         # Load the entrypoint class.
         extension_class = entrypoint.load()
-        # Instantiate the extension.
-        # TODO: we probably want to pass something, like self.config.
-        extension = extension_class()
-        logger.info('Loaded extension %s.', name)
-        self.extensions.append(extension)
+        logger.debug('Loaded extension %s.', extension_class)
+        return extension_class
 
     def _find_entrypoint(self, group, name, install=True):
         """Find an entry point for this extension or recipe.
@@ -169,7 +172,7 @@ class ConfigCook(object):
         entrypoint = self._find_recipe_entrypoint(name)
         # Load the entrypoint class.
         recipe_class = entrypoint.load()
-        logger.debug('Loaded recipe %s.', name)
+        logger.debug('Loaded recipe %s.', recipe_class)
         return recipe_class
 
     def _load_part(self, name):
