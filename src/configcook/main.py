@@ -56,9 +56,13 @@ class ConfigCook(object):
                     part,
                 )
                 sys.exit(1)
+            # TODO: check dependencies between parts.
             self._part_names.append(part)
             self._load_part(part)
             # TODO: let recipes do something.
+
+        for recipe in self.recipes:
+            recipe.install()
 
         logger.debug('End of ConfigCook call.')
 
@@ -165,13 +169,8 @@ class ConfigCook(object):
         entrypoint = self._find_recipe_entrypoint(name)
         # Load the entrypoint class.
         recipe_class = entrypoint.load()
-        # Instantiate the recipe.
-        # TODO: we probably want to pass something, like self.config
-        # or the part name or options.  Maybe do this in _load_part.
-        recipe = recipe_class()
-        logger.info('Loaded recipe %s.', name)
-        self.recipes.append(recipe)
-        return recipe
+        logger.debug('Loaded recipe %s.', name)
+        return recipe_class
 
     def _load_part(self, name):
         options = self.config[name]
@@ -179,4 +178,8 @@ class ConfigCook(object):
             logger.error('recipe option missing from %s section', name)
             sys.exit(1)
         recipe_name = options['recipe']
-        recipe = self._load_recipe(recipe_name)
+        recipe_class = self._load_recipe(recipe_name)
+        # Instantiate the recipe.
+        recipe = recipe_class(name, **options)
+        logger.info('Loaded part %s with recipe %s.', name, recipe_name)
+        self.recipes.append(recipe)
