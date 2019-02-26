@@ -49,3 +49,16 @@ Design decisions
 * pip is leading. You should be able to manually do ``pip install -r *requirements.txt -c *constraints.txt`` and have the same packages and versions installed as when you would have run configcook.  configcook may install more, or suggest changes to those version files.
 * Version pins are only in the requirements.txt and constraints.txt files, or variants like dev-requirements.txt.
 * Extensions and recipes are encouraged to follow our design decisions, but we cannot enforce this.
+
+
+Recipes
+-------
+
+Some hints for recipe authors who want their recipe to be a good citizen:
+
+- A recipe class SHOULD inherit from ``configcook.recipes.BaseRecipe``.
+- A recipe class ``__init__`` MUST accept a tuple of ``name, config, options``.  ``name`` is the name of the part or section.
+- A recipe class SHOULD NOT change the ``config``.  This is the parsed configcook configuration, in a dictionary of dictionaries.
+- A recipe class MAY update its recipe ``options``.  These are the parsed options in the section belonging to the recipe part.
+- A recipe class SHOULD have a ``packages`` property that returns a list of packages to install.  The list MAY be empty.
+- A recipe class SHOULD have an ``install`` method.
