@@ -59,7 +59,33 @@ class ConfigCook(object):
             # TODO: check dependencies between parts.
             self._part_names.append(part)
             self._load_part(part)
-            # TODO: let recipes do something.
+
+        logger.debug(
+            'Gathering list of all packages that the recipes want to install.'
+        )
+        all_packages = set()
+        for recipe in self.recipes:
+            packages = getattr(recipe, 'packages', [])
+            logger.debug(
+                'Part %s wants to install these packages: %s',
+                recipe.name,
+                ', '.join(packages),
+            )
+            all_packages.update(set(packages))
+        logger.info(
+            'Recipes want to install %d packages (not including dependencies).',
+            len(all_packages),
+        )
+        sorted_packages = sorted(all_packages, key=str.lower)
+        logger.info('Full list of packages: %s', ', '.join(sorted_packages))
+        if self.options.verbose:
+            logger.debug('One package per line for easier viewing:')
+            for package in sorted_packages:
+                logger.debug(package)
+        logger.info('Installing all packages.')
+        # TODO: catch error in this command.
+        result = self._pip('install', *sorted_packages)
+        print(result)
 
         for recipe in self.recipes:
             recipe.install()

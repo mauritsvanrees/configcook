@@ -14,6 +14,14 @@ class BaseRecipe(object):
         self.options = options
         self.recipe_name = options.get('recipe', '')
 
+    @property
+    def packages(self):
+        # Look for option 'packages' with fallback to 'eggs'.
+        for opt in ('packages', 'eggs'):
+            if opt in self.options:
+                return self.options[opt].split()
+        return []
+
     def install(self):
         logger.info(
             'Calling install of part %s, recipe %s.',
