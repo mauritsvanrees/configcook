@@ -88,6 +88,11 @@ class ConfigCook(object):
         self._pip('install', *sorted_packages)
 
         for recipe in self.recipes:
+            logger.debug(
+                'Calling install of part %s, recipe %s.',
+                recipe.name,
+                recipe.recipe_name,
+            )
             recipe.install()
 
         logger.debug('End of ConfigCook call.')

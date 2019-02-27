@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
+from .utils import call_or_fail
+from .utils import format_command_for_print
 import logging
+import sys
 
 
 logger = logging.getLogger(__name__)
 
 
 class BaseRecipe(object):
-    """Base cookconfig recipe."""
+    """Base configcook recipe."""
 
     def __init__(self, name, config, options):
         self.name = name  # name of the part/section
@@ -23,16 +26,22 @@ class BaseRecipe(object):
         return []
 
     def install(self):
-        logger.info(
-            'Calling install of part %s, recipe %s.',
-            self.name,
-            self.recipe_name,
-        )
+        logger.debug('Empty install for part %s.', self.name)
 
 
-class ExampleRecipe(BaseRecipe):
-    """Example cookconfig recipe.
-
-    Probably want to move this to an examples directory.
-    But for now okay.
+class CommandRecipe(BaseRecipe):
+    """Basic configcook recipe that runs a command.
     """
+
+    def install(self):
+        command = self.options.get('command').split()
+        if not command:
+            # We could do this check earlier.
+            logger.error(
+                'part %s with recipe %s is missing the command option.',
+                self.name,
+                self.recipe_name,
+            )
+            sys.exit(1)
+        logger.debug('Calling command: %s', format_command_for_print(command))
+        call_or_fail(command)

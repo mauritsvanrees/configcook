@@ -62,7 +62,7 @@ setup(
         ],
         'configcook.recipe': [
             'configcook:recipe = configcook.recipes:BaseRecipe',
-            'configcook:recipe_example = configcook.recipes:ExampleRecipe',
+            'configcook:command = configcook.recipes:CommandRecipe',
         ],
     },
 )
