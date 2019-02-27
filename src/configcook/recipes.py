@@ -17,6 +17,26 @@ class BaseRecipe(object):
         self.options = options
         self.recipe_name = options.get('recipe', '')
 
+    def require(self, name):
+        """Require and return the name option.
+
+        Raise an error if the option is not there.
+        Empty is not allowed.
+        """
+        try:
+            value = self.options[name]
+        except KeyError:
+            logger.error(
+                'Required option %s is missing from part %s.', name, self.name
+            )
+            sys.exit(1)
+        if not value:
+            logger.error(
+                'Required option %s is empty in part %s.', name, self.name
+            )
+            sys.exit(1)
+        return value
+
     @property
     @recipe_function
     def packages(self):
@@ -41,18 +61,27 @@ class CommandRecipe(BaseRecipe):
 
     @recipe_function
     def install(self):
-        cmds = self.options.get('command').strip().splitlines()
-        if not cmds:
-            # We could do this check earlier.
-            logger.error(
-                'part %s with recipe %s is missing the command option.',
-                self.name,
-                self.recipe_name,
-            )
-            sys.exit(1)
+        cmds = self.require('command').strip().splitlines()
         for command in cmds:
             if not command:
                 continue
             logger.debug('Calling command: %s', command)
             command = command.split()
             call_or_fail(command)
+
+
+class TemplateRecipe(BaseRecipe):
+    """Basic configcook recipe that renders an inline template to a file.
+    """
+
+    @recipe_function
+    def install(self):
+        value = self.require('input')
+        output = self.require('output')
+        # TODO: expand variables in input:
+        # ${configcook:parts} should become a list.
+        # ~ should become /home/maurits.
+        with open(output, 'w') as outfile:
+            outfile.write(value)
+        logger.debug('Wrote to output file %s', outfile)
+        logger.debug('Value written: %r', value)

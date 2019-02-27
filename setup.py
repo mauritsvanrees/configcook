@@ -63,6 +63,7 @@ setup(
         'configcook.recipe': [
             'configcook:packages = configcook.recipes:BaseRecipe',
             'configcook:command = configcook.recipes:CommandRecipe',
+            'configcook:template = configcook.recipes:TemplateRecipe',
         ],
     },
 )
