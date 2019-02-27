@@ -29,7 +29,8 @@ class ConfigCook(object):
             logger.error("Section 'configcook' missing from config file.")
             sys.exit(1)
         logger.debug('configcook in sections.')
-        # We could do self._pip('freeze') here as start to see what we have got.
+        # We could do self._pip('freeze') here as start
+        # to see what we have got.
         ccc = self.config['configcook']
         if 'extensions' in ccc:
             self._extension_names = self.config['configcook'][
@@ -73,7 +74,8 @@ class ConfigCook(object):
             )
             all_packages.update(set(packages))
         logger.info(
-            'Recipes want to install %d packages (not including dependencies).',
+            'Recipes want to install %d packages '
+            '(not including dependencies).',
             len(all_packages),
         )
         sorted_packages = sorted(all_packages, key=str.lower)

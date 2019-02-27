@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from .utils import call_or_fail
-from .utils import format_command_for_print
 import logging
 import sys
 
