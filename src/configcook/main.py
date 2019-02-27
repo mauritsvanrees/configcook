@@ -85,9 +85,7 @@ class ConfigCook(object):
         logger.info('Installing all packages.')
         # Note: we could call use pkg_resources to check if these packages
         # are already installed, but I guess pip is better at that.
-        # TODO: catch error in this command.
-        result = self._pip('install', *sorted_packages)
-        print(result)
+        self._pip('install', *sorted_packages)
 
         for recipe in self.recipes:
             recipe.install()
@@ -100,10 +98,14 @@ class ConfigCook(object):
         # section.
         cmd = ['pip']
         cmd.extend(args)
+        # We could append --quiet in the commands that support it,
+        # if self.options.verbose is False, but with 'install'
+        # it is a bit too quiet: you don't see anything
+
         # Depending on which pip command we run, we may want to call
         # a different function.  For now we simply call the command,
         # and if this fails the program quits.
-        return call_or_fail(cmd)
+        call_or_fail(cmd)
 
     def _load_extensions(self):
         logger.debug('Loading extensions.')
@@ -172,9 +174,7 @@ class ConfigCook(object):
             'We do not yet have a %s entrypoint with name %s.', group, name
         )
         logger.info('Trying to install package %s.', package_name)
-        # TODO: catch error in this command.
-        result = self._pip('install', package_name)
-        print(result)
+        self._pip('install', package_name)
         # Retry, but this time do not allow to install.
         logger.info(
             'Retrying searching for %s entrypoint with name %s '
