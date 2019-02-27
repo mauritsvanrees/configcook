@@ -2,12 +2,37 @@
 import functools
 import logging
 import os
+import re
 import subprocess
+import sys
 import tempfile
 import time
 
 
 logger = logging.getLogger(__name__)
+# pattern for ${part:option}
+substitution_pattern = re.compile(r'\${([^:]*):([^}]+)}')
+
+
+def substitute(config, text, current_part=''):
+    """Get substitution value.
+
+    Get the real value from something like ${part:option}.
+    """
+    for part, option in substitution_pattern.findall(text):
+        template = '${%s:%s}' % (part, option)
+        if not part:
+            # ${:option} points to the current part
+            part = current_part
+        try:
+            value = config[part][option]
+        except KeyError:
+            logger.error('Unable to substitute %r from config', template)
+            sys.exit(1)
+        logger.debug('Substituting %r with %r', template, value)
+        # TODO: call recursively if needed.
+        text = text.replace(template, value)
+    return text
 
 
 def format_command_for_print(command):
@@ -100,4 +125,5 @@ def recipe_function(fun):
             instance.recipe_name,
         )
         return result
+
     return wrapper_recipe_function
