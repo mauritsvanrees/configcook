@@ -78,16 +78,17 @@ class ConfigCook(object):
             '(not including dependencies).',
             len(all_packages),
         )
-        sorted_packages = sorted(all_packages, key=str.lower)
-        logger.info('Full list of packages: %s', ', '.join(sorted_packages))
-        if self.options.verbose:
-            logger.debug('One package per line for easier viewing:')
-            for package in sorted_packages:
-                logger.debug(package)
-        logger.info('Installing all packages.')
-        # Note: we could call use pkg_resources to check if these packages
-        # are already installed, but I guess pip is better at that.
-        self._pip('install', *sorted_packages)
+        if all_packages:
+            sorted_packages = sorted(all_packages, key=str.lower)
+            logger.info('Full list of packages: %s', ', '.join(sorted_packages))
+            if self.options.verbose:
+                logger.debug('One package per line for easier viewing:')
+                for package in sorted_packages:
+                    logger.debug(package)
+            logger.info('Installing all packages.')
+            # Note: we could call use pkg_resources to check if these packages
+            # are already installed, but I guess pip is better at that.
+            self._pip('install', *sorted_packages)
 
         for recipe in self.recipes:
             logger.debug(
