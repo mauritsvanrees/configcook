@@ -30,12 +30,12 @@ class BaseRecipe(object):
 
 
 class CommandRecipe(BaseRecipe):
-    """Basic configcook recipe that runs a command.
+    """Basic configcook recipe that runs one or more commands.
     """
 
     def install(self):
-        command = self.options.get('command').split()
-        if not command:
+        cmds = self.options.get('command').strip().splitlines()
+        if not cmds:
             # We could do this check earlier.
             logger.error(
                 'part %s with recipe %s is missing the command option.',
@@ -43,5 +43,9 @@ class CommandRecipe(BaseRecipe):
                 self.recipe_name,
             )
             sys.exit(1)
-        logger.debug('Calling command: %s', format_command_for_print(command))
-        call_or_fail(command)
+        for command in cmds:
+            if not command:
+                continue
+            logger.debug('Calling command: %s', command)
+            command = command.split()
+            call_or_fail(command)
