@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
+import os
 import six
 import subprocess
 import sys
+import tempfile
 
 
 logger = logging.getLogger(__name__)
-MUST_CLOSE_FDS = not sys.platform.startswith('win')
-INPUT_ENCODING = 'UTF-8'
-if getattr(sys.stdin, 'encoding', None):
-    INPUT_ENCODING = sys.stdin.encoding
-OUTPUT_ENCODING = INPUT_ENCODING
-if getattr(sys.stdout, 'encoding', None):
-    OUTPUT_ENCODING = sys.stdout.encoding
 
 
 def format_command_for_print(command):
@@ -29,76 +24,55 @@ def format_command_for_print(command):
     return " ".join(args)
 
 
-def _subprocess_open(p, command, input_value, show_stderr):
-    # Taken over from zest.releaser.
-    i, o, e = (p.stdin, p.stdout, p.stderr)
-    if input_value:
-        i.write(input_value.encode(INPUT_ENCODING))
-    i.close()
-    stdout_output = o.read()
-    stderr_output = e.read()
-    # We assume that the output from commands we're running is text.
-    if not isinstance(stdout_output, six.text_type):
-        stdout_output = stdout_output.decode(OUTPUT_ENCODING)
-    if not isinstance(stderr_output, six.text_type):
-        stderr_output = stderr_output.decode(OUTPUT_ENCODING)
-    # TODO.  Note that the returncode is always None, also after
-    # running p.kill().  The shell=True may be tripping us up.  For
-    # some ideas, see http://stackoverflow.com/questions/4789837
-    if p.returncode or show_stderr or 'Traceback' in stderr_output:
-        # Some error occured
-        result = stdout_output + stderr_output
-    else:
-        # Only return the stdout. Stderr only contains possible
-        # weird/confusing warnings that might trip up extraction of version
-        # numbers and so.
-        result = stdout_output
-        if stderr_output:
-            logger.debug(
-                "Stderr of running command '%s':\n%s",
-                format_command_for_print(command),
-                stderr_output,
-            )
-    o.close()
-    e.close()
-    return result
+def call_or_fail(command):
+    """Call a command or fail (raise an exception).
 
-
-def execute_command(command, input_value=''):
-    """commands.getoutput() replacement that also works on windows
-
-    Command must be a list of arguments.
-
-    Taken over from zest.releaser, which took it over from zc.buildout.
+    Call this when you want the program to quit in case of an error.
+    The most likely exceptions are OSError and subprocess.CalledProcessError.
     """
-    if not isinstance(command, (list, tuple)):
-        logger.error(
-            'command argument to execute_command must be a list or tuple. '
-            'Got %r.',
-            command,
+    return subprocess.check_call(command)
+
+
+def call_with_exitcode(command):
+    """Call a command and return the exit code.
+
+    Call this when you want the user to see the output and errors,
+    and the code is only interested in the exitcode.
+    """
+    return subprocess.call(command)
+
+
+def call_with_output_or_fail(command):
+    """Call a command and return the output or fail (raise an exception).
+
+    Call this when you want to catch the output,
+    and want the program to quit in case of an error.
+    The most likely exceptions are OSError and subprocess.CalledProcessError.
+    """
+    return subprocess.check_output(command)
+
+
+def call_with_out_and_err(command):
+    """Call a command and return the exit code, output and errors.
+
+    Call this when you want to use all three return values,
+    for example to log the output with INFO, and the errors with DEBUG
+    (or with log level ERROR), and to handle the exitcode.
+    """
+    out = ''
+    err = ''
+    outfile = tempfile.mkstemp()
+    errfile = tempfile.mkstemp()
+    try:
+        exitcode = subprocess.call(
+            command, stdout=outfile[0], stderr=errfile[0]
         )
-        sys.exit(1)
-    logger.debug("Running command: '%s'", format_command_for_print(command))
-    env = None
-    show_stderr = True
-    # On Python 3, subprocess.Popen can and should be used as context
-    # manager, to avoid unclosed files.  On Python 2 this is not possible.
-    process_kwargs = {
-        'shell': not isinstance(command, (list, tuple)),
-        'stdin': subprocess.PIPE,
-        'stdout': subprocess.PIPE,
-        'stderr': subprocess.PIPE,
-        'close_fds': MUST_CLOSE_FDS,
-        'env': env,
-    }
-    if hasattr(subprocess.Popen, '__exit__'):
-        # Python 3
-        with subprocess.Popen(command, **process_kwargs) as process:
-            result = _subprocess_open(
-                process, command, input_value, show_stderr
-            )
-    else:
-        # Python 2
-        process = subprocess.Popen(command, **process_kwargs)
-        result = _subprocess_open(process, command, input_value, show_stderr)
-    return result
+    finally:
+        with open(outfile[1]) as myfile:
+            out = myfile.read()
+        with open(errfile[1]) as myfile:
+            err = myfile.read()
+        # remove the temporary files
+        os.remove(outfile[1])
+        os.remove(errfile[1])
+    return exitcode, out, err

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .config import parse_config
-from .utils import execute_command
+from .utils import call_or_fail
 import logging
 import pkg_resources
 import sys
@@ -83,6 +83,8 @@ class ConfigCook(object):
             for package in sorted_packages:
                 logger.debug(package)
         logger.info('Installing all packages.')
+        # Note: we could call use pkg_resources to check if these packages
+        # are already installed, but I guess pip is better at that.
         # TODO: catch error in this command.
         result = self._pip('install', *sorted_packages)
         print(result)
@@ -93,12 +95,15 @@ class ConfigCook(object):
         logger.debug('End of ConfigCook call.')
 
     def _pip(self, *args):
-        """Run a pip command in a shell."""
+        """Run a pip command."""
         # TODO: read extra pip options from configcook or maybe recipe
         # section.
         cmd = ['pip']
         cmd.extend(args)
-        return execute_command(cmd)
+        # Depending on which pip command we run, we may want to call
+        # a different function.  For now we simply call the command,
+        # and if this fails the program quits.
+        return call_or_fail(cmd)
 
     def _load_extensions(self):
         logger.debug('Loading extensions.')
