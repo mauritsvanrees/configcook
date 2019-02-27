@@ -61,7 +61,7 @@ setup(
             'configcook:extension_example = configcook.extensions:ExampleExtension',
         ],
         'configcook.recipe': [
-            'configcook:recipe = configcook.recipes:BaseRecipe',
+            'configcook:packages = configcook.recipes:BaseRecipe',
             'configcook:command = configcook.recipes:CommandRecipe',
         ],
     },

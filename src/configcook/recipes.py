@@ -28,6 +28,10 @@ class BaseRecipe(object):
         logger.debug('Empty install for part %s.', self.name)
 
 
+# TODO update method?  When is that called?
+# We don't yet have a .installed.cfg.
+
+
 class CommandRecipe(BaseRecipe):
     """Basic configcook recipe that runs one or more commands.
     """
