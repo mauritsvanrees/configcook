@@ -85,5 +85,5 @@ class TemplateRecipe(BaseRecipe):
         value = substitute(self.config, value, current_part=self.name)
         with open(output, 'w') as outfile:
             outfile.write(value)
-        logger.debug('Wrote to output file %s', outfile)
+        logger.info('Part %s wrote to output file %s', self.name, output)
         logger.debug('Value written: %r', value)
