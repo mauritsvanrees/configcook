@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import functools
 import logging
 import os
 import subprocess
 import tempfile
+import time
 
 
 logger = logging.getLogger(__name__)
@@ -74,3 +76,28 @@ def call_with_out_and_err(command):
         os.remove(outfile[1])
         os.remove(errfile[1])
     return exitcode, out, err
+
+
+def recipe_function(fun):
+    @functools.wraps(fun)
+    def wrapper_recipe_function(*args, **kwargs):
+        instance = args[0]
+        logger.debug(
+            'Calling function %s of part %s [recipe %s].',
+            fun.__name__,
+            instance.name,
+            instance.recipe_name,
+        )
+        start = time.time()
+        result = fun(*args, **kwargs)
+        end = time.time()
+        run_time = end - start
+        logger.debug(
+            'Finished in %.4f seconds: function %s of part %s [recipe %s].',
+            run_time,
+            fun.__name__,
+            instance.name,
+            instance.recipe_name,
+        )
+        return result
+    return wrapper_recipe_function

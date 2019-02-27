@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .utils import call_or_fail
+from .utils import recipe_function
 import logging
 import sys
 
@@ -17,6 +18,7 @@ class BaseRecipe(object):
         self.recipe_name = options.get('recipe', '')
 
     @property
+    @recipe_function
     def packages(self):
         # Look for option 'packages' with fallback to 'eggs'.
         for opt in ('packages', 'eggs'):
@@ -24,6 +26,7 @@ class BaseRecipe(object):
                 return self.options[opt].split()
         return []
 
+    @recipe_function
     def install(self):
         logger.debug('Empty install for part %s.', self.name)
 
@@ -36,6 +39,7 @@ class CommandRecipe(BaseRecipe):
     """Basic configcook recipe that runs one or more commands.
     """
 
+    @recipe_function
     def install(self):
         cmds = self.options.get('command').strip().splitlines()
         if not cmds:
