@@ -3,6 +3,7 @@ from .utils import call_or_fail
 from .utils import recipe_function
 from .utils import substitute
 import logging
+import os
 import sys
 
 
@@ -78,10 +79,10 @@ class TemplateRecipe(BaseRecipe):
     @recipe_function
     def install(self):
         value = self.require('input')
-        output = self.require('output')
+        # In output filename, ~ should become /home/maurits.
+        output = os.path.expanduser(self.require('output'))
         # ${configcook:parts} should become a list.
         value = substitute(self.config, value, current_part=self.name)
-        # ~ should become /home/maurits.
         with open(output, 'w') as outfile:
             outfile.write(value)
         logger.debug('Wrote to output file %s', outfile)
