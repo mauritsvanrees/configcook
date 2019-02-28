@@ -23,6 +23,7 @@ import logging
 
 logger = logging.getLogger('zc.buildout')
 
+
 class Error(Exception):
     """Base class for ConfigParser exceptions."""
 
@@ -50,6 +51,7 @@ class Error(Exception):
 
     __str__ = __repr__
 
+
 class ParsingError(Error):
     """Raised when a configuration file does not follow legal syntax."""
 
@@ -62,17 +64,20 @@ class ParsingError(Error):
         self.errors.append((lineno, line))
         self.message += '\n\t[line %2d]: %s' % (lineno, line)
 
+
 class MissingSectionHeaderError(ParsingError):
     """Raised when a key-value pair is found before any section header."""
 
     def __init__(self, filename, lineno, line):
         Error.__init__(
             self,
-            'File contains no section headers.\nfile: %s, line: %d\n%r' %
-            (filename, lineno, line))
+            'File contains no section headers.\nfile: %s, line: %d\n%r'
+            % (filename, lineno, line),
+        )
         self.filename = filename
         self.lineno = lineno
         self.line = line
+
 
 # This regex captures either sections headers with optional trailing comment
 # separated by a semicolon or a hash.  Section headers can have an optional
@@ -92,7 +97,7 @@ class MissingSectionHeaderError(ParsingError):
 # the always returned wrapped in a list with a single item that contains the
 # original expression
 
-section_header  = re.compile(
+section_header = re.compile(
     r'(?P<head>\[)'
     r'\s*'
     r'(?P<name>[^\s#[\]:;{}]+)'
@@ -102,14 +107,14 @@ section_header  = re.compile(
     r'(?P<tail>]'
     r'\s*'
     r'([#;].*)?$)'
-    ).match
+).match
 
 option_start = re.compile(
-    r'(?P<name>[^\s{}[\]=:]+\s*[-+]?)'
-    r'='
-    r'(?P<value>.*)$').match
+    r'(?P<name>[^\s{}[\]=:]+\s*[-+]?)' r'=' r'(?P<value>.*)$'
+).match
 
 leading_blank_lines = re.compile(r"^(\s*\n)+")
+
 
 def parse(fp, fpname, exp_globals=dict):
     """Parse a sectioned setup file.
@@ -136,24 +141,24 @@ def parse(fp, fpname, exp_globals=dict):
     # the current section condition, possibly updated from a section expression
     section_condition = True
     context = None
-    cursect = None                            # None, or a dictionary
+    cursect = None  # None, or a dictionary
     blockmode = None
     optname = None
     lineno = 0
-    e = None                                  # None, or an exception
+    e = None  # None, or an exception
     while True:
         line = fp.readline()
         if not line:
-            break # EOF
+            break  # EOF
 
         lineno = lineno + 1
 
         if line[0] in '#;':
-            continue # comment
+            continue  # comment
 
         if line[0].isspace() and cursect is not None and optname:
             if not section_condition:
-                #skip section based on its expression condition
+                # skip section based on its expression condition
                 continue
             # continuation line
             if blockmode:
@@ -170,15 +175,17 @@ def parse(fp, fpname, exp_globals=dict):
                 section_condition = True
                 sectname = header.group('name')
 
-                head = header.group('head') # the starting [
+                head = header.group('head')  # the starting [
                 expression = header.group('expression')
-                tail = header.group('tail') # closing ]and comment
+                tail = header.group('tail')  # closing ]and comment
                 if expression:
                     # normalize tail comments to Python style
                     tail = tail.replace(';', '#') if tail else ''
                     # un-escape literal # and ; . Do not use a
                     # string-escape decode
-                    expr = expression.replace(r'\x23','#').replace(r'x3b', ';')
+                    expr = expression.replace(r'\x23', '#').replace(
+                        r'x3b', ';'
+                    )
                     # rebuild a valid Python expression wrapped in a list
                     expr = head + expr + tail
                     # lazily populate context only expression
@@ -191,7 +198,8 @@ def parse(fp, fpname, exp_globals=dict):
                     if not section_condition:
                         logger.debug(
                             'Ignoring section %(sectname)r with [expression]:'
-                            ' %(expression)r' % locals())
+                            ' %(expression)r' % locals()
+                        )
                         continue
 
                 if sectname in sections:
@@ -241,6 +249,7 @@ def parse(fp, fpname, exp_globals=dict):
             value = section[name]
             if value[:1].isspace():
                 section[name] = leading_blank_lines.sub(
-                    '', textwrap.dedent(value.rstrip()))
+                    '', textwrap.dedent(value.rstrip())
+                )
 
     return sections
