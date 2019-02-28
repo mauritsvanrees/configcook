@@ -126,7 +126,7 @@ class ConfigCook(object):
         """Run a pip command."""
         # TODO: read extra pip options from configcook or maybe recipe
         # section.
-        cmd = ["pip"]
+        cmd = [self.config["configcook"]["pip"]]
         cmd.extend(args)
         # We could append --quiet in the commands that support it,
         # if self.options.verbose is False, but with 'install'
@@ -266,8 +266,13 @@ class ConfigCook(object):
                 ccc[key] = default
         # TODO: interpolate ${part:name} in all options.
         # TODO: call os.path.expanduser on all options.
-        # TODO: turn all known paths to absolute paths.
-        ccc["bin-directory"] = os.path.abspath(ccc["bin-directory"])
+        # TODO: turn all known paths to real paths.
+        ccc["bin-directory"] = os.path.realpath(
+            os.path.expanduser(ccc["bin-directory"])
+        )
+        ccc["executable"] = os.path.realpath(os.path.expanduser(sys.executable))
+        ccc["configcook-script"] = os.path.realpath(os.path.expanduser(sys.argv[0]))
+        ccc["pip"] = os.path.join(ccc["bin-directory"], "pip")
         # TODO: set pip and executable in ccc.
         # Or let _check_virtualenv do this.
 
@@ -279,7 +284,8 @@ class ConfigCook(object):
         And possibly check that the current configcook script
         is in that directory too.
         """
-        bin_dir = self.config["configcook"]["bin-directory"]
+        ccc = self.config["configcook"]
+        bin_dir = ccc["bin-directory"]
         if not os.path.isdir(bin_dir):
             logger.error(
                 "[configcook] bin-directory (%r) does not exist or is not "
@@ -288,14 +294,26 @@ class ConfigCook(object):
             )
             sys.exit(1)
         bin_contents = os.listdir(bin_dir)
-        for script in ("pip", "python", "configcook"):
-            if script not in bin_contents:
+        for key in ("executable", "pip", "configcook-script"):
+            script = ccc[key]
+            script_dir = os.path.dirname(script)
+            script_name = os.path.basename(script)
+            # Is the script in the bin dir?
+            if script_dir != bin_dir:
+                logger.error(
+                    "%s (%s) is not in [configcook] bin-directory (%r). "
+                    "Please create a virtualenv (or similar).",
+                    key,
+                    ccc["executable"],
+                    bin_dir,
+                )
+                sys.exit(1)
+            # Does the script exist?
+            if script_name not in bin_contents:
                 logger.error(
                     "[configcook] bin-directory (%r) misses a %s script. "
                     "Please create a virtualenv (or similar).",
                     bin_dir,
-                    script,
+                    script_name,
                 )
                 sys.exit(1)
-        # TODO: check that sys.executable is in the bin-directory.
-        # Might be called bin/pypy3 instead of python.
