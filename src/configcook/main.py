@@ -3,6 +3,7 @@ from .config import parse_config
 from .utils import call_or_fail
 from copy import deepcopy
 import logging
+import os
 import pkg_resources
 import sys
 
@@ -59,6 +60,7 @@ class ConfigCook(object):
             sys.exit(1)
         logger.debug('configcook in sections.')
         self._enhance_config()
+        self._check_virtualenv()
 
         # We could do self._pip('freeze') here as start
         # to see what we have got.
@@ -277,3 +279,20 @@ class ConfigCook(object):
         # TODO: interpolate ${part:name} in all options.
         # TODO: call os.path.expanduser on all options.
         # TODO: turn all known paths to absolute paths.
+
+    def _check_virtualenv(self):
+        """Check that we are in a virtualenv, or similar.
+
+        Best seems to be to check that the bin-directory
+        has python and pip executables.
+        And possibly check that the current configcook script
+        is in that directory too.
+        """
+        bin_dir = self.config['configcook']['bin-directory']
+        if not os.path.isdir(bin_dir):
+            logger.error(
+                '[configcook] bin-directory (%r) does not exist or is not '
+                'a directory. Please create a virtualenv (or similar).',
+                bin_dir,
+            )
+            sys.exit(1)
