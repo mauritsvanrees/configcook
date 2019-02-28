@@ -1,12 +1,41 @@
 # -*- coding: utf-8 -*-
 from .config import parse_config
 from .utils import call_or_fail
+from copy import deepcopy
 import logging
 import pkg_resources
 import sys
 
 
 logger = logging.getLogger(__name__)
+
+
+# Defaults for the configcook section.
+# Taken over from _buildout_default_options for inspiration,
+# but most of them commented out for now.
+DEFAULTS = {
+    # 'allow-hosts': '*',
+    # 'allow-picked-versions': 'true',
+    # 'allow-unknown-extras': 'false',
+    'bin-directory': 'bin',
+    # 'develop-eggs-directory': 'develop-eggs',
+    # 'eggs-directory': 'eggs',
+    # 'executable': sys.executable,
+    # 'find-links': '',
+    # 'install-from-cache': 'false',
+    # 'installed': '.installed.cfg',
+    # 'log-format': '',
+    # 'log-level': 'INFO',
+    # 'newest': 'true',
+    # 'offline': 'false',
+    # 'parts-directory': 'parts',
+    # 'prefer-final': 'true',
+    # 'python': 'buildout',
+    # 'show-picked-versions': 'false',
+    # 'socket-timeout': '',
+    # 'update-versions-file': '',
+    # 'use-dependency-links': 'true',
+}
 
 
 class ConfigCook(object):
@@ -29,6 +58,8 @@ class ConfigCook(object):
             logger.error("Section 'configcook' missing from config file.")
             sys.exit(1)
         logger.debug('configcook in sections.')
+        self._enhance_config()
+
         # We could do self._pip('freeze') here as start
         # to see what we have got.
         ccc = self.config['configcook']
@@ -222,3 +253,27 @@ class ConfigCook(object):
         recipe = recipe_class(name, self.config, options)
         logger.info('Loaded part %s with recipe %s.', name, recipe_name)
         self.recipes.append(recipe)
+
+    def _enhance_config(self):
+        """Enhance our configuration.
+
+        self.config is a dict of dicts.
+        We can add information, especially to the configcook section.
+
+        We save the original information in raw_config.
+
+        Idea: for compatibility we might copy the cookconfig section
+        to the buildout section.  But let's not for now.
+        """
+        self.raw_config = deepcopy(self.config)
+        # Set defaults for configcook section.
+        ccc = self.config['configcook']
+        for key, default in DEFAULTS.items():
+            if key not in ccc:
+                logger.debug(
+                    'Set [configcook] %s option to default %r.', key, default
+                )
+                ccc[key] = default
+        # TODO: interpolate ${part:name} in all options.
+        # TODO: call os.path.expanduser on all options.
+        # TODO: turn all known paths to absolute paths.
