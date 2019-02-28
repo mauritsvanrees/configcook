@@ -279,6 +279,9 @@ class ConfigCook(object):
         # TODO: interpolate ${part:name} in all options.
         # TODO: call os.path.expanduser on all options.
         # TODO: turn all known paths to absolute paths.
+        ccc['bin-directory'] = os.path.abspath(ccc['bin-directory'])
+        # TODO: set pip and executable in ccc.
+        # Or let _check_virtualenv do this.
 
     def _check_virtualenv(self):
         """Check that we are in a virtualenv, or similar.
@@ -296,3 +299,15 @@ class ConfigCook(object):
                 bin_dir,
             )
             sys.exit(1)
+        bin_contents = os.listdir(bin_dir)
+        for script in ('pip', 'python', 'configcook'):
+            if script not in bin_contents:
+                logger.error(
+                    '[configcook] bin-directory (%r) misses a %s script. '
+                    'Please create a virtualenv (or similar).',
+                    bin_dir,
+                    script,
+                )
+                sys.exit(1)
+        # TODO: check that sys.executable is in the bin-directory.
+        # Might be called bin/pypy3 instead of python.
