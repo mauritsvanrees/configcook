@@ -21,7 +21,7 @@ import re
 import textwrap
 import logging
 
-logger = logging.getLogger('zc.buildout')
+logger = logging.getLogger("zc.buildout")
 
 
 class Error(Exception):
@@ -42,7 +42,7 @@ class Error(Exception):
     # a new property that takes lookup precedence.
     message = property(_get_message, _set_message)
 
-    def __init__(self, msg=''):
+    def __init__(self, msg=""):
         self.message = msg
         Exception.__init__(self, msg)
 
@@ -56,13 +56,13 @@ class ParsingError(Error):
     """Raised when a configuration file does not follow legal syntax."""
 
     def __init__(self, filename):
-        Error.__init__(self, 'File contains parsing errors: %s' % filename)
+        Error.__init__(self, "File contains parsing errors: %s" % filename)
         self.filename = filename
         self.errors = []
 
     def append(self, lineno, line):
         self.errors.append((lineno, line))
-        self.message += '\n\t[line %2d]: %s' % (lineno, line)
+        self.message += "\n\t[line %2d]: %s" % (lineno, line)
 
 
 class MissingSectionHeaderError(ParsingError):
@@ -71,7 +71,7 @@ class MissingSectionHeaderError(ParsingError):
     def __init__(self, filename, lineno, line):
         Error.__init__(
             self,
-            'File contains no section headers.\nfile: %s, line: %d\n%r'
+            "File contains no section headers.\nfile: %s, line: %d\n%r"
             % (filename, lineno, line),
         )
         self.filename = filename
@@ -98,19 +98,19 @@ class MissingSectionHeaderError(ParsingError):
 # original expression
 
 section_header = re.compile(
-    r'(?P<head>\[)'
-    r'\s*'
-    r'(?P<name>[^\s#[\]:;{}]+)'
-    r'\s*'
-    r'(:(?P<expression>[^#;]*))?'
-    r'\s*'
-    r'(?P<tail>]'
-    r'\s*'
-    r'([#;].*)?$)'
+    r"(?P<head>\[)"
+    r"\s*"
+    r"(?P<name>[^\s#[\]:;{}]+)"
+    r"\s*"
+    r"(:(?P<expression>[^#;]*))?"
+    r"\s*"
+    r"(?P<tail>]"
+    r"\s*"
+    r"([#;].*)?$)"
 ).match
 
 option_start = re.compile(
-    r'(?P<name>[^\s{}[\]=:]+\s*[-+]?)' r'=' r'(?P<value>.*)$'
+    r"(?P<name>[^\s{}[\]=:]+\s*[-+]?)" r"=" r"(?P<value>.*)$"
 ).match
 
 leading_blank_lines = re.compile(r"^(\s*\n)+")
@@ -153,7 +153,7 @@ def parse(fp, fpname, exp_globals=dict):
 
         lineno = lineno + 1
 
-        if line[0] in '#;':
+        if line[0] in "#;":
             continue  # comment
 
         if line[0].isspace() and cursect is not None and optname:
@@ -173,19 +173,17 @@ def parse(fp, fpname, exp_globals=dict):
             if header:
                 # reset to True when starting a new section
                 section_condition = True
-                sectname = header.group('name')
+                sectname = header.group("name")
 
-                head = header.group('head')  # the starting [
-                expression = header.group('expression')
-                tail = header.group('tail')  # closing ]and comment
+                head = header.group("head")  # the starting [
+                expression = header.group("expression")
+                tail = header.group("tail")  # closing ]and comment
                 if expression:
                     # normalize tail comments to Python style
-                    tail = tail.replace(';', '#') if tail else ''
+                    tail = tail.replace(";", "#") if tail else ""
                     # un-escape literal # and ; . Do not use a
                     # string-escape decode
-                    expr = expression.replace(r'\x23', '#').replace(
-                        r'x3b', ';'
-                    )
+                    expr = expression.replace(r"\x23", "#").replace(r"x3b", ";")
                     # rebuild a valid Python expression wrapped in a list
                     expr = head + expr + tail
                     # lazily populate context only expression
@@ -197,8 +195,8 @@ def parse(fp, fpname, exp_globals=dict):
                     # evaluates to false
                     if not section_condition:
                         logger.debug(
-                            'Ignoring section %(sectname)r with [expression]:'
-                            ' %(expression)r' % locals()
+                            "Ignoring section %(sectname)r with [expression]:"
+                            " %(expression)r" % locals()
                         )
                         continue
 
@@ -214,15 +212,15 @@ def parse(fp, fpname, exp_globals=dict):
                 # no section header in the file?
                 raise MissingSectionHeaderError(fpname, lineno, line)
             else:
-                if line[:2] == '=>':
-                    line = '<part-dependencies> = ' + line[2:]
+                if line[:2] == "=>":
+                    line = "<part-dependencies> = " + line[2:]
                 mo = option_start(line)
                 if mo:
                     if not section_condition:
                         # filter out options of conditionally ignored section
                         continue
                     # option start line
-                    optname, optval = mo.group('name', 'value')
+                    optname, optval = mo.group("name", "value")
                     optname = optname.rstrip()
                     optval = optval.strip()
                     cursect[optname] = optval
@@ -249,7 +247,7 @@ def parse(fp, fpname, exp_globals=dict):
             value = section[name]
             if value[:1].isspace():
                 section[name] = leading_blank_lines.sub(
-                    '', textwrap.dedent(value.rstrip())
+                    "", textwrap.dedent(value.rstrip())
                 )
 
     return sections

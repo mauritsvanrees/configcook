@@ -18,7 +18,7 @@ DEFAULTS = {
     # 'allow-hosts': '*',
     # 'allow-picked-versions': 'true',
     # 'allow-unknown-extras': 'false',
-    'bin-directory': 'bin',
+    "bin-directory": "bin",
     # 'develop-eggs-directory': 'develop-eggs',
     # 'eggs-directory': 'eggs',
     # 'executable': sys.executable,
@@ -47,46 +47,43 @@ class ConfigCook(object):
         self.config = None
         self._extension_names = []
         self._part_names = []
-        logger.debug('Initialized ConfigCook.')
+        logger.debug("Initialized ConfigCook.")
 
     def __call__(self):
-        logger.debug('Calling ConfigCook.')
+        logger.debug("Calling ConfigCook.")
 
-        logger.debug('Reading config.')
-        self.config = parse_config('cc.cfg')
-        logger.debug('Sections: %s', ', '.join(self.config.keys()))
-        if 'configcook' not in self.config:
+        logger.debug("Reading config.")
+        self.config = parse_config("cc.cfg")
+        logger.debug("Sections: %s", ", ".join(self.config.keys()))
+        if "configcook" not in self.config:
             logger.error("Section 'configcook' missing from config file.")
             sys.exit(1)
-        logger.debug('configcook in sections.')
+        logger.debug("configcook in sections.")
         self._enhance_config()
         self._check_virtualenv()
 
         # We could do self._pip('freeze') here as start
         # to see what we have got.
-        ccc = self.config['configcook']
-        if 'extensions' in ccc:
-            self._extension_names = self.config['configcook'][
-                'extensions'
-            ].split()
+        ccc = self.config["configcook"]
+        if "extensions" in ccc:
+            self._extension_names = self.config["configcook"]["extensions"].split()
             logger.debug(
-                'extensions in configcook section: %s',
-                ', '.join(self._extension_names),
+                "extensions in configcook section: %s", ", ".join(self._extension_names)
             )
             self._load_extensions()
             # TODO: let extensions do something.
 
         # Do we want all parts/sections/recipes?
-        if 'parts' in ccc:
-            parts = ccc['parts'].split()
+        if "parts" in ccc:
+            parts = ccc["parts"].split()
         else:
-            logger.error('Missing parts option in configcook section.')
+            logger.error("Missing parts option in configcook section.")
             sys.exit(1)
         for part in parts:
             if part not in self.config:
                 logger.error(
-                    '[configcook] parts option has %s, '
-                    'but this is missing from the sections.',
+                    "[configcook] parts option has %s, "
+                    "but this is missing from the sections.",
                     part,
                 )
                 sys.exit(1)
@@ -94,47 +91,42 @@ class ConfigCook(object):
             self._part_names.append(part)
             self._load_part(part)
 
-        logger.debug(
-            'Gathering list of all packages that the recipes want to install.'
-        )
+        logger.debug("Gathering list of all packages that the recipes want to install.")
         all_packages = set()
         for recipe in self.recipes:
-            packages = getattr(recipe, 'packages', [])
+            packages = getattr(recipe, "packages", [])
             logger.debug(
-                'Part %s wants to install these packages: %s',
+                "Part %s wants to install these packages: %s",
                 recipe.name,
-                ', '.join(packages),
+                ", ".join(packages),
             )
             all_packages.update(set(packages))
         logger.info(
-            'Recipes want to install %d packages '
-            '(not including dependencies).',
+            "Recipes want to install %d packages " "(not including dependencies).",
             len(all_packages),
         )
         if all_packages:
             sorted_packages = sorted(all_packages, key=str.lower)
-            logger.info(
-                'Full list of packages: %s', ', '.join(sorted_packages)
-            )
+            logger.info("Full list of packages: %s", ", ".join(sorted_packages))
             if self.options.verbose:
-                logger.debug('One package per line for easier viewing:')
+                logger.debug("One package per line for easier viewing:")
                 for package in sorted_packages:
                     logger.debug(package)
-            logger.info('Installing all packages.')
+            logger.info("Installing all packages.")
             # Note: we could call use pkg_resources to check if these packages
             # are already installed, but I guess pip is better at that.
-            self._pip('install', *sorted_packages)
+            self._pip("install", *sorted_packages)
 
         for recipe in self.recipes:
             recipe.install()
 
-        logger.debug('End of ConfigCook call.')
+        logger.debug("End of ConfigCook call.")
 
     def _pip(self, *args):
         """Run a pip command."""
         # TODO: read extra pip options from configcook or maybe recipe
         # section.
-        cmd = ['pip']
+        cmd = ["pip"]
         cmd.extend(args)
         # We could append --quiet in the commands that support it,
         # if self.options.verbose is False, but with 'install'
@@ -146,24 +138,24 @@ class ConfigCook(object):
         call_or_fail(cmd)
 
     def _load_extensions(self):
-        logger.debug('Loading extensions.')
+        logger.debug("Loading extensions.")
         # All extensions use the options from configcook.
-        options = self.config['configcook']
+        options = self.config["configcook"]
         for name in self._extension_names:
             extension_class = self._load_extension(name)
             # Instantiate the extension.
             extension = extension_class(name, self.config, options)
-            logger.info('Loaded extension %s.', name)
+            logger.info("Loaded extension %s.", name)
             self.extensions.append(extension)
-        logger.debug('Loaded extensions.')
+        logger.debug("Loaded extensions.")
 
     def _load_extension(self, name):
-        logger.debug('Loading extension %s.', name)
+        logger.debug("Loading extension %s.", name)
         # This will either find an entrypoint or sys.exit(1).
         entrypoint = self._find_extension_entrypoint(name)
         # Load the entrypoint class.
         extension_class = entrypoint.load()
-        logger.debug('Loaded extension %s.', extension_class)
+        logger.debug("Loaded extension %s.", extension_class)
         return extension_class
 
     def _find_entrypoint(self, group, name, install=True):
@@ -174,14 +166,14 @@ class ConfigCook(object):
          'package.name:special' if a package has more than one entrypoint.
         - When install=True, we can try a pip install.
         """
-        logger.debug('Searching %s entrypoint with name %s.', group, name)
+        logger.debug("Searching %s entrypoint with name %s.", group, name)
         for entrypoint in pkg_resources.iter_entry_points(group=group):
             if entrypoint.name == name:
-                logger.debug('Found %s entrypoint with name %s.', group, name)
+                logger.debug("Found %s entrypoint with name %s.", group, name)
                 return entrypoint
         # Check if package is installed.
         # We support both package and package:name.
-        package_name = name.split(':')[0]
+        package_name = name.split(":")[0]
         try:
             pkg_resources.get_distribution(package_name)
         except pkg_resources.DistributionNotFound:
@@ -190,8 +182,8 @@ class ConfigCook(object):
         else:
             # TODO: check dist.version.
             logger.error(
-                'We have package %s but could not find a %s entrypoint '
-                'with name %s.',
+                "We have package %s but could not find a %s entrypoint "
+                "with name %s.",
                 package_name,
                 group,
                 name,
@@ -201,22 +193,20 @@ class ConfigCook(object):
             # We either do not want to allow installing at all, or this is
             # the second time we are called, and it has not helped.
             logger.error(
-                'We cannot install a package %s to find a '
-                '%s entrypoint with name %s.',
+                "We cannot install a package %s to find a "
+                "%s entrypoint with name %s.",
                 package_name,
                 group,
                 name,
             )
             sys.exit(1)
-        logger.debug(
-            'We do not yet have a %s entrypoint with name %s.', group, name
-        )
-        logger.info('Trying to install package %s.', package_name)
-        self._pip('install', package_name)
+        logger.debug("We do not yet have a %s entrypoint with name %s.", group, name)
+        logger.info("Trying to install package %s.", package_name)
+        self._pip("install", package_name)
         # Retry, but this time do not allow to install.
         logger.info(
-            'Retrying searching for %s entrypoint with name %s '
-            'after install of package %s.',
+            "Retrying searching for %s entrypoint with name %s "
+            "after install of package %s.",
             group,
             name,
             package_name,
@@ -226,34 +216,34 @@ class ConfigCook(object):
     def _find_extension_entrypoint(self, name):
         """Find an entry point for this extension.
         """
-        group = 'configcook.extension'
+        group = "configcook.extension"
         return self._find_entrypoint(group, name)
 
     def _find_recipe_entrypoint(self, name):
         """Find an entry point for this recipe.
         """
-        group = 'configcook.recipe'
+        group = "configcook.recipe"
         return self._find_entrypoint(group, name)
 
     def _load_recipe(self, name):
-        logger.debug('Loading recipe %s.', name)
+        logger.debug("Loading recipe %s.", name)
         # This will either find an entrypoint or sys.exit(1).
         entrypoint = self._find_recipe_entrypoint(name)
         # Load the entrypoint class.
         recipe_class = entrypoint.load()
-        logger.debug('Loaded recipe %s.', recipe_class)
+        logger.debug("Loaded recipe %s.", recipe_class)
         return recipe_class
 
     def _load_part(self, name):
         options = self.config[name]
-        if 'recipe' not in options:
-            logger.error('recipe option missing from %s section', name)
+        if "recipe" not in options:
+            logger.error("recipe option missing from %s section", name)
             sys.exit(1)
-        recipe_name = options['recipe']
+        recipe_name = options["recipe"]
         recipe_class = self._load_recipe(recipe_name)
         # Instantiate the recipe.
         recipe = recipe_class(name, self.config, options)
-        logger.info('Loaded part %s with recipe %s.', name, recipe_name)
+        logger.info("Loaded part %s with recipe %s.", name, recipe_name)
         self.recipes.append(recipe)
 
     def _enhance_config(self):
@@ -269,17 +259,15 @@ class ConfigCook(object):
         """
         self.raw_config = deepcopy(self.config)
         # Set defaults for configcook section.
-        ccc = self.config['configcook']
+        ccc = self.config["configcook"]
         for key, default in DEFAULTS.items():
             if key not in ccc:
-                logger.debug(
-                    'Set [configcook] %s option to default %r.', key, default
-                )
+                logger.debug("Set [configcook] %s option to default %r.", key, default)
                 ccc[key] = default
         # TODO: interpolate ${part:name} in all options.
         # TODO: call os.path.expanduser on all options.
         # TODO: turn all known paths to absolute paths.
-        ccc['bin-directory'] = os.path.abspath(ccc['bin-directory'])
+        ccc["bin-directory"] = os.path.abspath(ccc["bin-directory"])
         # TODO: set pip and executable in ccc.
         # Or let _check_virtualenv do this.
 
@@ -291,20 +279,20 @@ class ConfigCook(object):
         And possibly check that the current configcook script
         is in that directory too.
         """
-        bin_dir = self.config['configcook']['bin-directory']
+        bin_dir = self.config["configcook"]["bin-directory"]
         if not os.path.isdir(bin_dir):
             logger.error(
-                '[configcook] bin-directory (%r) does not exist or is not '
-                'a directory. Please create a virtualenv (or similar).',
+                "[configcook] bin-directory (%r) does not exist or is not "
+                "a directory. Please create a virtualenv (or similar).",
                 bin_dir,
             )
             sys.exit(1)
         bin_contents = os.listdir(bin_dir)
-        for script in ('pip', 'python', 'configcook'):
+        for script in ("pip", "python", "configcook"):
             if script not in bin_contents:
                 logger.error(
-                    '[configcook] bin-directory (%r) misses a %s script. '
-                    'Please create a virtualenv (or similar).',
+                    "[configcook] bin-directory (%r) misses a %s script. "
+                    "Please create a virtualenv (or similar).",
                     bin_dir,
                     script,
                 )

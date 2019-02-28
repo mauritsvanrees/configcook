@@ -11,25 +11,25 @@ import time
 
 logger = logging.getLogger(__name__)
 # pattern for ${part:option}
-substitution_pattern = re.compile(r'\${([^:]*):([^}]+)}')
+substitution_pattern = re.compile(r"\${([^:]*):([^}]+)}")
 
 
-def substitute(config, text, current_part=''):
+def substitute(config, text, current_part=""):
     """Get substitution value.
 
     Get the real value from something like ${part:option}.
     """
     for part, option in substitution_pattern.findall(text):
-        template = '${%s:%s}' % (part, option)
+        template = "${%s:%s}" % (part, option)
         if not part:
             # ${:option} points to the current part
             part = current_part
         try:
             value = config[part][option]
         except KeyError:
-            logger.error('Unable to substitute %r from config', template)
+            logger.error("Unable to substitute %r from config", template)
             sys.exit(1)
-        logger.debug('Substituting %r with %r', template, value)
+        logger.debug("Substituting %r with %r", template, value)
         # TODO: call recursively if needed.
         text = text.replace(template, value)
     return text
@@ -84,14 +84,12 @@ def call_with_out_and_err(command):
     for example to log the output with INFO, and the errors with DEBUG
     (or with log level ERROR), and to handle the exitcode.
     """
-    out = ''
-    err = ''
+    out = ""
+    err = ""
     outfile = tempfile.mkstemp()
     errfile = tempfile.mkstemp()
     try:
-        exitcode = subprocess.call(
-            command, stdout=outfile[0], stderr=errfile[0]
-        )
+        exitcode = subprocess.call(command, stdout=outfile[0], stderr=errfile[0])
     finally:
         with open(outfile[1]) as myfile:
             out = myfile.read()
@@ -108,7 +106,7 @@ def recipe_function(fun):
     def wrapper_recipe_function(*args, **kwargs):
         instance = args[0]
         logger.debug(
-            'Calling function %s of part %s [recipe %s].',
+            "Calling function %s of part %s [recipe %s].",
             fun.__name__,
             instance.name,
             instance.recipe_name,
@@ -118,7 +116,7 @@ def recipe_function(fun):
         end = time.time()
         run_time = end - start
         logger.debug(
-            'Finished in %.4f seconds: function %s of part %s [recipe %s].',
+            "Finished in %.4f seconds: function %s of part %s [recipe %s].",
             run_time,
             fun.__name__,
             instance.name,

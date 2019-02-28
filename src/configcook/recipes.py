@@ -17,7 +17,7 @@ class BaseRecipe(object):
         self.name = name  # name of the part/section
         self.config = config
         self.options = options
-        self.recipe_name = options.get('recipe', '')
+        self.recipe_name = options.get("recipe", "")
 
     def require(self, name):
         """Require and return the name option.
@@ -28,14 +28,10 @@ class BaseRecipe(object):
         try:
             value = self.options[name]
         except KeyError:
-            logger.error(
-                'Required option %s is missing from part %s.', name, self.name
-            )
+            logger.error("Required option %s is missing from part %s.", name, self.name)
             sys.exit(1)
         if not value:
-            logger.error(
-                'Required option %s is empty in part %s.', name, self.name
-            )
+            logger.error("Required option %s is empty in part %s.", name, self.name)
             sys.exit(1)
         return value
 
@@ -43,14 +39,14 @@ class BaseRecipe(object):
     @recipe_function
     def packages(self):
         # Look for option 'packages' with fallback to 'eggs'.
-        for opt in ('packages', 'eggs'):
+        for opt in ("packages", "eggs"):
             if opt in self.options:
                 return self.options[opt].split()
         return []
 
     @recipe_function
     def install(self):
-        logger.debug('Empty install for part %s.', self.name)
+        logger.debug("Empty install for part %s.", self.name)
 
 
 # TODO update method?  When is that called?
@@ -63,11 +59,11 @@ class CommandRecipe(BaseRecipe):
 
     @recipe_function
     def install(self):
-        cmds = self.require('command').strip().splitlines()
+        cmds = self.require("command").strip().splitlines()
         for command in cmds:
             if not command:
                 continue
-            logger.debug('Calling command: %s', command)
+            logger.debug("Calling command: %s", command)
             command = command.split()
             call_or_fail(command)
 
@@ -78,12 +74,12 @@ class TemplateRecipe(BaseRecipe):
 
     @recipe_function
     def install(self):
-        value = self.require('input')
+        value = self.require("input")
         # In output filename, ~ should become /home/maurits.
-        output = os.path.expanduser(self.require('output'))
+        output = os.path.expanduser(self.require("output"))
         # ${configcook:parts} should become a list.
         value = substitute(self.config, value, current_part=self.name)
-        with open(output, 'w') as outfile:
+        with open(output, "w") as outfile:
             outfile.write(value)
-        logger.info('Part %s wrote to output file %s', self.name, output)
-        logger.debug('Value written: %r', value)
+        logger.info("Part %s wrote to output file %s", self.name, output)
+        logger.debug("Value written: %r", value)
