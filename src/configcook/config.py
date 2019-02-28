@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .configparser import parse
+from ._vendor.configparser import parse
 import os
 
 
