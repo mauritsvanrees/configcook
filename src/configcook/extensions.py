@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
 class BaseExtension(object):
-    """Base cookconfig extension."""
+    """Base cookconfig extension.
+
+    A zc.buildout extension gets the buildout object passed.
+    For example, this is the init of mr.developer:
+
+    def __init__(self, buildout):
+        self.buildout = buildout
+        self.buildout_dir = buildout['buildout']['directory']
+        self.executable = sys.argv[0]
+
+    """
 
     def __init__(self, name, config, options):
         self.name = name
