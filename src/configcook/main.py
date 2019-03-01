@@ -252,12 +252,10 @@ class ConfigCook(object):
         self.config is a dict of dicts.
         We can add information, especially to the configcook section.
 
-        We save the original information in raw_config.
-
         Idea: for compatibility we might copy the cookconfig section
         to the buildout section.  But let's not for now.
+        We could do this when an option fake_buildout is True.
         """
-        self.raw_config = deepcopy(self.config)
         # Set defaults for configcook section.
         ccc = self.config["configcook"]
         for key, default in DEFAULTS.items():
