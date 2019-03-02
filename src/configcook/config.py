@@ -12,6 +12,7 @@ class ConfigCookConfig(dict):
     Then we have an original, unchanged copy,
     without any enhancements or trickery.
     """
+
     def __init__(self, config):
         super(ConfigCookConfig, self).__init__(config)
         self._raw = deepcopy(config)

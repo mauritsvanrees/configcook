@@ -125,3 +125,43 @@ def recipe_function(fun):
         return result
 
     return wrapper_recipe_function
+
+
+def call_extensions(fun):
+    @functools.wraps(fun)
+    def wrapper_call_extensions(*args, **kwargs):
+        instance = args[0]
+        function_name = fun.__name__
+        if instance.extensions:
+            start_ext = time.time()
+            logger.debug(
+                "Calling extensions.run_before for function %s.", function_name
+            )
+            for extension in instance.extensions:
+                if hasattr(extension, "run_before"):
+                    extension.run_before(function_name, *args, **kwargs)
+        logger.debug("Calling function %s.", function_name)
+        start = time.time()
+        result = fun(*args, **kwargs)
+        end = time.time()
+        run_time = end - start
+        if instance.extensions:
+            logger.debug("Calling extensions.run_after for function %s.", function_name)
+            for extension in instance.extensions:
+                if hasattr(extension, "run_after"):
+                    extension.run_after(function_name, *args, **kwargs)
+            end_ext = time.time()
+            ext_time = end_ext - start_ext
+            logger.debug(
+                "Finished in %.4f seconds (%.4f including extensions): function %s.",
+                run_time,
+                ext_time,
+                function_name,
+            )
+        else:
+            logger.debug(
+                "Finished in %.4f seconds: function %s.", run_time, function_name
+            )
+        return result
+
+    return wrapper_call_extensions

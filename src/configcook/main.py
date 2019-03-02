@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .config import parse_config
+from .utils import call_extensions
 from .utils import call_or_fail
 from copy import deepcopy
 import logging
@@ -122,6 +123,7 @@ class ConfigCook(object):
 
         logger.debug("End of ConfigCook call.")
 
+    @call_extensions
     def _pip(self, *args):
         """Run a pip command."""
         # TODO: read extra pip options from configcook or maybe recipe
