@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+import logging
+import pdb
+
+
+logger = logging.getLogger(__name__)
+
+
 class BaseExtension(object):
     """Base cookconfig extension.
 
@@ -24,3 +31,36 @@ class ExampleExtension(BaseExtension):
     Probably want to move this to an examples directory.
     But for now okay.
     """
+
+
+class PDBExtension(BaseExtension):
+    """cookconfig extension that calls pdb.
+    """
+
+    def run_before(self, function_name, instance, *args, **kwargs):
+        """A hook that is run before a function in configcook.
+
+        instance is the configcook object.
+        """
+        logger.info(
+            "Entered PDB before calling configcook function %s "
+            "with args %r and keyword args %r.",
+            function_name,
+            args,
+            kwargs,
+        )
+        pdb.set_trace()
+
+    def run_after(self, function_name, instance, *args, **kwargs):
+        """A hook that is run after a function in configcook.
+
+        instance is the configcook object.
+        """
+        logger.info(
+            "Entered PDB after calling configcook function %s "
+            "with args %r and keyword args %r.",
+            function_name,
+            args,
+            kwargs,
+        )
+        pdb.set_trace()

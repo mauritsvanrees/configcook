@@ -58,7 +58,8 @@ setup(
     entry_points={
         "console_scripts": ["configcook = configcook.cli:main"],
         "configcook.extension": [
-            "configcook:extension_example = configcook.extensions:ExampleExtension"
+            "configcook:extension_example = configcook.extensions:ExampleExtension",
+            "configcook:pdb = configcook.extensions:PDBExtension"
         ],
         "configcook.recipe": [
             "configcook:packages = configcook.recipes:BaseRecipe",
