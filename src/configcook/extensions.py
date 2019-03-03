@@ -37,11 +37,18 @@ class PDBExtension(BaseExtension):
     """cookconfig extension that calls pdb.
     """
 
+    def __init__(self, name, config, options):
+        super(PDBExtension, self).__init__(name, config, options)
+        self.before = options.get('before', '').split()
+        self.after = options.get('after', '').split()
+
     def run_before(self, function_name, instance, *args, **kwargs):
         """A hook that is run before a function in configcook.
 
         instance is the configcook object.
         """
+        if function_name not in self.before:
+            return
         logger.info(
             "Entered PDB before calling configcook function %s "
             "with args %r and keyword args %r.",
@@ -56,6 +63,8 @@ class PDBExtension(BaseExtension):
 
         instance is the configcook object.
         """
+        if function_name not in self.after:
+            return
         logger.info(
             "Entered PDB after calling configcook function %s "
             "with args %r and keyword args %r.",

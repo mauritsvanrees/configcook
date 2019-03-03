@@ -156,10 +156,15 @@ class ConfigCook(object):
             "extensions in configcook section: %s", ", ".join(self._extension_names)
         )
         logger.debug("Loading extensions.")
-        # All extensions use the options from configcook.
-        options = self.config["configcook"]
         for name in self._extension_names:
             extension_class = self._load_extension(name)
+            # Get the extension options from section [name].
+            # If you use 'extension:name' in the config,
+            # you likely get a parse error,
+            # because 'name' is tried as a section condition.
+            # Not quite what we want.
+            # Try 'extension_name' then.
+            options = self.config.get(name.replace(':', '_'))
             # Instantiate the extension.
             extension = extension_class(name, self.config, options)
             logger.info("Loaded extension %s.", name)
