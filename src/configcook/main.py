@@ -53,6 +53,17 @@ class ConfigCook(object):
     def __call__(self):
         logger.debug("Calling ConfigCook.")
 
+        self._read_config()
+        self._load_extensions()
+
+        # We will use @call_extensions around these functions.
+        self.load_recipes()
+        self.install_packages_from_recipes()
+        self.run_recipes()
+
+        logger.debug("End of ConfigCook call.")
+
+    def _read_config(self):
         logger.debug("Reading config.")
         self.config = parse_config("cc.cfg")
         logger.debug("Sections: %s", ", ".join(self.config.keys()))
@@ -62,66 +73,6 @@ class ConfigCook(object):
         logger.debug("configcook in sections.")
         self._enhance_config()
         self._check_virtualenv()
-
-        # We could do self._pip('freeze') here as start
-        # to see what we have got.
-        ccc = self.config["configcook"]
-        if "extensions" in ccc:
-            self._extension_names = self.config["configcook"]["extensions"].split()
-            logger.debug(
-                "extensions in configcook section: %s", ", ".join(self._extension_names)
-            )
-            self._load_extensions()
-            # TODO: let extensions do something.
-
-        # Do we want all parts/sections/recipes?
-        if "parts" in ccc:
-            parts = ccc["parts"].split()
-        else:
-            logger.error("Missing parts option in configcook section.")
-            sys.exit(1)
-        for part in parts:
-            if part not in self.config:
-                logger.error(
-                    "[configcook] parts option has %s, "
-                    "but this is missing from the sections.",
-                    part,
-                )
-                sys.exit(1)
-            # TODO: check dependencies between parts.
-            self._part_names.append(part)
-            self._load_part(part)
-
-        logger.debug("Gathering list of all packages that the recipes want to install.")
-        all_packages = set()
-        for recipe in self.recipes:
-            packages = getattr(recipe, "packages", [])
-            logger.debug(
-                "Part %s wants to install these packages: %s",
-                recipe.name,
-                ", ".join(packages),
-            )
-            all_packages.update(set(packages))
-        logger.info(
-            "Recipes want to install %d packages " "(not including dependencies).",
-            len(all_packages),
-        )
-        if all_packages:
-            sorted_packages = sorted(all_packages, key=str.lower)
-            logger.info("Full list of packages: %s", ", ".join(sorted_packages))
-            if self.options.verbose:
-                logger.debug("One package per line for easier viewing:")
-                for package in sorted_packages:
-                    logger.debug(package)
-            logger.info("Installing all packages.")
-            # Note: we could call use pkg_resources to check if these packages
-            # are already installed, but I guess pip is better at that.
-            self.pip("install", *sorted_packages)
-
-        for recipe in self.recipes:
-            recipe.install()
-
-        logger.debug("End of ConfigCook call.")
 
     @call_extensions
     def pip(self, *args):
@@ -139,7 +90,71 @@ class ConfigCook(object):
         # and if this fails the program quits.
         call_or_fail(cmd)
 
+    @call_extensions
+    def load_recipes(self, *args):
+        # Do we want all parts/sections/recipes?
+        ccc = self.config["configcook"]
+        if "parts" not in ccc:
+            logger.error("Missing parts option in configcook section.")
+            sys.exit(1)
+        parts = ccc["parts"].split()
+        for part in parts:
+            if part not in self.config:
+                logger.error(
+                    "[configcook] parts option has %s, "
+                    "but this is missing from the sections.",
+                    part,
+                )
+                sys.exit(1)
+            # TODO: check dependencies between parts.
+            self._part_names.append(part)
+            self._load_part(part)
+
+    @call_extensions
+    def install_packages_from_recipes(self, *args):
+        logger.debug("Gathering list of all packages that the recipes want to install.")
+        all_packages = set()
+        for recipe in self.recipes:
+            packages = getattr(recipe, "packages", [])
+            logger.debug(
+                "Part %s wants to install these packages: %s",
+                recipe.name,
+                ", ".join(packages),
+            )
+            all_packages.update(set(packages))
+        logger.info(
+            "Recipes want to install %d packages " "(not including dependencies).",
+            len(all_packages),
+        )
+        if not all_packages:
+            return
+        sorted_packages = sorted(all_packages, key=str.lower)
+        logger.info("Full list of packages: %s", ", ".join(sorted_packages))
+        if self.options.verbose:
+            logger.debug("One package per line for easier viewing:")
+            for package in sorted_packages:
+                logger.debug(package)
+        logger.info("Installing all packages.")
+        # Note: we could use pkg_resources to check if these packages
+        # are already installed, but I guess pip is better at that.
+        self.pip("install", *sorted_packages)
+
+    @call_extensions
+    def run_recipes(self):
+        for recipe in self.recipes:
+            recipe.install()
+
     def _load_extensions(self):
+        # We could do self._pip('freeze') here as start
+        # to see what we have got.
+        ccc = self.config["configcook"]
+        if "extensions" not in ccc:
+            logger.debug("No extensions in config.")
+            return
+        self._extension_names = self.config["configcook"]["extensions"].split()
+        logger.debug(
+            "extensions in configcook section: %s", ", ".join(self._extension_names)
+        )
         logger.debug("Loading extensions.")
         # All extensions use the options from configcook.
         options = self.config["configcook"]
