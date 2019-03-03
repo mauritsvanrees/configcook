@@ -116,7 +116,7 @@ class ConfigCook(object):
             logger.info("Installing all packages.")
             # Note: we could call use pkg_resources to check if these packages
             # are already installed, but I guess pip is better at that.
-            self._pip("install", *sorted_packages)
+            self.pip("install", *sorted_packages)
 
         for recipe in self.recipes:
             recipe.install()
@@ -124,7 +124,7 @@ class ConfigCook(object):
         logger.debug("End of ConfigCook call.")
 
     @call_extensions
-    def _pip(self, *args):
+    def pip(self, *args):
         """Run a pip command."""
         # TODO: read extra pip options from configcook or maybe recipe
         # section.
@@ -204,7 +204,7 @@ class ConfigCook(object):
             sys.exit(1)
         logger.debug("We do not yet have a %s entrypoint with name %s.", group, name)
         logger.info("Trying to install package %s.", package_name)
-        self._pip("install", package_name)
+        self.pip("install", package_name)
         # Retry, but this time do not allow to install.
         logger.info(
             "Retrying searching for %s entrypoint with name %s "
