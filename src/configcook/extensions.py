@@ -23,6 +23,12 @@ class BaseExtension(object):
         self.name = name
         self.config = config
         self.options = options
+        self.parse_options()
+
+    def parse_options(self):
+        """Do special handling on options if needed.
+        """
+        pass
 
 
 class ExampleExtension(BaseExtension):
@@ -37,10 +43,9 @@ class PDBExtension(BaseExtension):
     """cookconfig extension that calls pdb.
     """
 
-    def __init__(self, name, config, options):
-        super(PDBExtension, self).__init__(name, config, options)
-        self.before = options.get('before', '').split()
-        self.after = options.get('after', '').split()
+    def parse_options(self):
+        self.before = self.options.get('before', '').split()
+        self.after = self.options.get('after', '').split()
 
     def __call__(self):
         pdb.set_trace()
