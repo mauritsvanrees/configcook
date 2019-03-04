@@ -130,7 +130,10 @@ class ConfigCook(object):
         )
         if not all_packages:
             return
-        sorted_packages = sorted(all_packages, key=str.lower)
+        self._install_packages(*all_packages)
+
+    def _install_packages(self, *packages):
+        sorted_packages = sorted(packages, key=str.lower)
         logger.info("Full list of packages: %s", ", ".join(sorted_packages))
         if self.options.verbose:
             logger.debug("One package per line for easier viewing:")
