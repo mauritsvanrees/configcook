@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseExtension(object):
-    """Base cookconfig extension.
+    """Base configcook extension.
 
     A zc.buildout extension gets the buildout object passed.
     For example, this is the init of mr.developer:
@@ -32,7 +32,7 @@ class BaseExtension(object):
 
 
 class ExampleExtension(BaseExtension):
-    """Example cookconfig extension.
+    """Example configcook extension.
 
     Probably want to move this to an examples directory.
     But for now okay.
@@ -40,7 +40,7 @@ class ExampleExtension(BaseExtension):
 
 
 class PDBExtension(BaseExtension):
-    """cookconfig extension that calls pdb.
+    """configcook extension that calls pdb.
     """
 
     def parse_options(self):
