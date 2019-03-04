@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from .utils import entrypoint_function
 import logging
 import sys
 
@@ -41,3 +42,12 @@ class Entrypoint(object):
             logger.error("Required option %s is empty in [%s].", name, self.name)
             sys.exit(1)
         return value
+
+    @property
+    @entrypoint_function
+    def packages(self):
+        # Look for option 'packages' with fallback to 'eggs'.
+        for opt in ("packages", "eggs"):
+            if opt in self.options:
+                return self.options[opt].split()
+        return []

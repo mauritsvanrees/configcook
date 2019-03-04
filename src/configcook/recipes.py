@@ -19,15 +19,6 @@ class BaseRecipe(Entrypoint):
     def parse_options(self):
         self.recipe_name = self.options.get("recipe", "")
 
-    @property
-    @entrypoint_function
-    def packages(self):
-        # Look for option 'packages' with fallback to 'eggs'.
-        for opt in ("packages", "eggs"):
-            if opt in self.options:
-                return self.options[opt].split()
-        return []
-
     @entrypoint_function
     def install(self):
         logger.debug("Empty install for part %s.", self.name)
