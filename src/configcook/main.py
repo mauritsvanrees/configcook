@@ -113,7 +113,7 @@ class ConfigCook(object):
             self._load_part(part)
 
     @call_extensions
-    def install_packages_from_recipes(self, *args):
+    def install_packages_from_recipes(self):
         logger.debug("Gathering list of all packages that the recipes want to install.")
         all_packages = set()
         for recipe in self.recipes:
