@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from .entrypoints import Entrypoint
 from .utils import call_or_fail
-from .utils import recipe_function
+from .utils import entrypoint_function
 from .utils import substitute
 import logging
 import os
@@ -14,11 +14,13 @@ logger = logging.getLogger(__name__)
 class BaseRecipe(Entrypoint):
     """Base configcook recipe."""
 
+    is_recipe = True
+
     def parse_options(self):
         self.recipe_name = self.options.get("recipe", "")
 
     @property
-    @recipe_function
+    @entrypoint_function
     def packages(self):
         # Look for option 'packages' with fallback to 'eggs'.
         for opt in ("packages", "eggs"):
@@ -26,7 +28,7 @@ class BaseRecipe(Entrypoint):
                 return self.options[opt].split()
         return []
 
-    @recipe_function
+    @entrypoint_function
     def install(self):
         logger.debug("Empty install for part %s.", self.name)
 
@@ -39,7 +41,7 @@ class CommandRecipe(BaseRecipe):
     """Basic configcook recipe that runs one or more commands.
     """
 
-    @recipe_function
+    @entrypoint_function
     def install(self):
         cmds = self.require("command").strip().splitlines()
         for command in cmds:
@@ -54,7 +56,7 @@ class TemplateRecipe(BaseRecipe):
     """Basic configcook recipe that renders an inline template to a file.
     """
 
-    @recipe_function
+    @entrypoint_function
     def install(self):
         value = self.require("input")
         # In output filename, ~ should become /home/maurits.

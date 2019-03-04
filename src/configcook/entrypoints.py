@@ -12,6 +12,9 @@ class Entrypoint(object):
     This is the basis for extensions and recipes.
     """
 
+    is_extension = False
+    is_recipe = False
+
     def __init__(self, name, config, options):
         self.name = name
         self.config = config

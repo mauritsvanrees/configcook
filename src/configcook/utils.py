@@ -102,30 +102,28 @@ def call_with_out_and_err(command):
     return exitcode, out, err
 
 
-def recipe_function(fun):
+def entrypoint_function(fun):
     @functools.wraps(fun)
-    def wrapper_recipe_function(*args, **kwargs):
+    def wrapper_entrypoint_function(*args, **kwargs):
+        # Get a nice name to identify this extension or part/recipe.
         instance = args[0]
-        logger.debug(
-            "Calling function %s of part %s [recipe %s].",
-            fun.__name__,
-            instance.name,
-            instance.recipe_name,
-        )
+        if instance.is_extension:
+            name = "extension {0}".format(instance.name)
+        elif instance.is_recipe:
+            name = "part {0} [recipe {1}]".format(instance.name, instance.recipe_name)
+        else:
+            name = instance.name
+        logger.debug("Calling function %s of %s.", fun.__name__, name)
         start = time.time()
         result = fun(*args, **kwargs)
         end = time.time()
         run_time = end - start
         logger.debug(
-            "Finished in %.4f seconds: function %s of part %s [recipe %s].",
-            run_time,
-            fun.__name__,
-            instance.name,
-            instance.recipe_name,
+            "Finished in %.4f seconds: function %s of %s.", run_time, fun.__name__, name
         )
         return result
 
-    return wrapper_recipe_function
+    return wrapper_entrypoint_function
 
 
 def call_extensions(fun):

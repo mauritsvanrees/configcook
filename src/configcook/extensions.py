@@ -11,6 +11,8 @@ class BaseExtension(Entrypoint):
     """Base configcook extension.
     """
 
+    is_extension = True
+
 
 class ExampleExtension(BaseExtension):
     """Example configcook extension.
