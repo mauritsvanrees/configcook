@@ -165,8 +165,10 @@ class ConfigCook(object):
             # Not quite what we want.
             # Try 'extension_name' then.
             options = self.config.get(name.replace(':', '_'))
-            # Instantiate the extension.
+            # Instantiate the extension and call it.
             extension = extension_class(name, self.config, options)
+            if callable(extension):
+                extension()
             logger.info("Loaded extension %s.", name)
             self.extensions.append(extension)
         logger.debug("Loaded extensions.")

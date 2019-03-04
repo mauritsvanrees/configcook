@@ -42,6 +42,9 @@ class PDBExtension(BaseExtension):
         self.before = options.get('before', '').split()
         self.after = options.get('after', '').split()
 
+    def __call__(self):
+        pdb.set_trace()
+
     def run_before(self, function_name, instance, *args, **kwargs):
         """A hook that is run before a function in configcook.
 
