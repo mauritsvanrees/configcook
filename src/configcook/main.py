@@ -2,6 +2,7 @@
 from .config import parse_config
 from .utils import call_extensions
 from .utils import call_or_fail
+from .utils import to_bool
 from copy import deepcopy
 import logging
 import os
@@ -23,6 +24,7 @@ DEFAULTS = {
     # 'develop-eggs-directory': 'develop-eggs',
     # 'eggs-directory': 'eggs',
     # 'executable': sys.executable,
+    "fake-buildout": False,
     # 'find-links': '',
     # 'install-from-cache': 'false',
     # 'installed': '.installed.cfg',
@@ -164,7 +166,7 @@ class ConfigCook(object):
             # because 'name' is tried as a section condition.
             # Not quite what we want.
             # Try 'extension_name' then.
-            options = self.config.get(name.replace(':', '_'))
+            options = self.config.get(name.replace(":", "_"))
             if options:
                 # Let the extension work on a copy, so it is isolated
                 # from possible changes to the main config.
@@ -279,10 +281,6 @@ class ConfigCook(object):
 
         self.config is a dict of dicts.
         We can add information, especially to the configcook section.
-
-        Idea: for compatibility we might copy the cookconfig section
-        to the buildout section.  But let's not for now.
-        We could do this when an option fake_buildout is True.
         """
         # Set defaults for configcook section.
         ccc = self.config["configcook"]
@@ -290,6 +288,9 @@ class ConfigCook(object):
             if key not in ccc:
                 logger.debug("Set [configcook] %s option to default %r.", key, default)
                 ccc[key] = default
+            elif isinstance(default, bool):
+                # Turn the user supplied value into a boolean.
+                ccc[key] = to_bool(ccc[key])
         # TODO: interpolate ${part:name} in all options.
         # TODO: call os.path.expanduser on all options.
         # TODO: turn all known paths to real paths.
@@ -299,8 +300,12 @@ class ConfigCook(object):
         ccc["executable"] = os.path.realpath(os.path.expanduser(sys.executable))
         ccc["configcook-script"] = os.path.realpath(os.path.expanduser(sys.argv[0]))
         ccc["pip"] = os.path.join(ccc["bin-directory"], "pip")
-        # TODO: set pip and executable in ccc.
-        # Or let _check_virtualenv do this.
+
+        # Call this last.
+        if ccc["fake-buildout"]:
+            # Make the configcook section available under the buildout name.
+            # This may improve compatibility between configcook and buildout.
+            self.config["buildout"] = ccc
 
     def _check_virtualenv(self):
         """Check that we are in a virtualenv, or similar.

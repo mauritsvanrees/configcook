@@ -44,8 +44,8 @@ class PDBExtension(BaseExtension):
     """
 
     def parse_options(self):
-        self.before = self.options.get('before', '').split()
-        self.after = self.options.get('after', '').split()
+        self.before = self.options.get("before", "").split()
+        self.after = self.options.get("after", "").split()
 
     def __call__(self):
         pdb.set_trace()

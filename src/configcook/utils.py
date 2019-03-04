@@ -3,6 +3,7 @@ import functools
 import logging
 import os
 import re
+import six
 import subprocess
 import sys
 import tempfile
@@ -165,3 +166,30 @@ def call_extensions(fun):
         return result
 
     return wrapper_call_extensions
+
+
+def to_bool(value):
+    """ Very if a value is actually true or false """
+    if isinstance(value, bool):
+        return value
+    if not isinstance(value, six.string_types):
+        raise ValueError("Must be text: %r" % value)
+    if not value:
+        return False
+    # Check on/off:
+    if value == "on":
+        return True
+    if value == "off":
+        return False
+    orig_value = value
+    # Check only the first character:
+    value = value[0].lower()
+    # yes/true/1
+    if value in ("y", "t", "1"):
+        return True
+    # no/false/0
+    if value in ("n", "f", "0"):
+        return False
+    raise ValueError(
+        "Cannot interpret as boolean, try true/false instead: %r" % orig_value
+    )
