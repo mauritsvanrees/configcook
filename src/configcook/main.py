@@ -165,6 +165,10 @@ class ConfigCook(object):
             # Not quite what we want.
             # Try 'extension_name' then.
             options = self.config.get(name.replace(':', '_'))
+            if options:
+                # Let the extension work on a copy, so it is isolated
+                # from possible changes to the main config.
+                options = deepcopy(options)
             # Instantiate the extension and call it.
             extension = extension_class(name, self.config, options)
             if callable(extension):
