@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from .entrypoints import Entrypoint
 from .utils import call_or_fail
 from .utils import recipe_function
 from .utils import substitute
@@ -10,30 +11,11 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-class BaseRecipe(object):
+class BaseRecipe(Entrypoint):
     """Base configcook recipe."""
 
-    def __init__(self, name, config, options):
-        self.name = name  # name of the part/section
-        self.config = config
-        self.options = options
-        self.recipe_name = options.get("recipe", "")
-
-    def require(self, name):
-        """Require and return the name option.
-
-        Raise an error if the option is not there.
-        Empty is not allowed.
-        """
-        try:
-            value = self.options[name]
-        except KeyError:
-            logger.error("Required option %s is missing from part %s.", name, self.name)
-            sys.exit(1)
-        if not value:
-            logger.error("Required option %s is empty in part %s.", name, self.name)
-            sys.exit(1)
-        return value
+    def parse_options(self):
+        self.recipe_name = self.options.get("recipe", "")
 
     @property
     @recipe_function

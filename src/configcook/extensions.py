@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from .entrypoints import Entrypoint
 import logging
 import pdb
 
@@ -6,29 +7,9 @@ import pdb
 logger = logging.getLogger(__name__)
 
 
-class BaseExtension(object):
+class BaseExtension(Entrypoint):
     """Base configcook extension.
-
-    A zc.buildout extension gets the buildout object passed.
-    For example, this is the init of mr.developer:
-
-    def __init__(self, buildout):
-        self.buildout = buildout
-        self.buildout_dir = buildout['buildout']['directory']
-        self.executable = sys.argv[0]
-
     """
-
-    def __init__(self, name, config, options):
-        self.name = name
-        self.config = config
-        self.options = options
-        self.parse_options()
-
-    def parse_options(self):
-        """Do special handling on options if needed.
-        """
-        pass
 
 
 class ExampleExtension(BaseExtension):
