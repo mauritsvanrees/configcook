@@ -57,6 +57,7 @@ class ConfigCook(object):
 
         self._read_config()
         self._load_extensions()
+        self._install_packages_from_extensions()
 
         # We will use @call_extensions around these functions.
         self.load_recipes()
@@ -112,25 +113,45 @@ class ConfigCook(object):
             self._part_names.append(part)
             self._load_part(part)
 
-    @call_extensions
-    def install_packages_from_recipes(self):
-        logger.debug("Gathering list of all packages that the recipes want to install.")
+    def _find_and_install_packages(self, extensions=False, recipes=False):
+        """Install packages from self.extensions or self.recipes."""
+        if not (extensions or recipes):
+            logger.error("Either extensions or recipes should be True.")
+            sys.exit(1)
+        if extensions and recipes:
+            logger.error("extensions or recipes cannot both be True.")
+            sys.exit(1)
+        if extensions:
+            sources = self.extensions
+        else:
+            sources = self.recipes
         all_packages = set()
-        for recipe in self.recipes:
-            packages = getattr(recipe, "packages", [])
+        for source in sources:
+            packages = getattr(source, "packages", [])
             logger.debug(
                 "Part %s wants to install these packages: %s",
-                recipe.name,
+                source.name,
                 ", ".join(packages),
             )
             all_packages.update(set(packages))
         logger.info(
-            "Recipes want to install %d packages " "(not including dependencies).",
+            "Found %d packages to install (not including dependencies).",
             len(all_packages),
         )
         if not all_packages:
             return
         self._install_packages(*all_packages)
+
+    def _install_packages_from_extensions(self):
+        logger.debug(
+            "Gathering list of all packages that the extensions want to install."
+        )
+        self._find_and_install_packages(extensions=True)
+
+    @call_extensions
+    def install_packages_from_recipes(self):
+        logger.debug("Gathering list of all packages that the recipes want to install.")
+        self._find_and_install_packages(recipes=True)
 
     def _install_packages(self, *packages):
         sorted_packages = sorted(packages, key=str.lower)
@@ -169,11 +190,10 @@ class ConfigCook(object):
             # because 'name' is tried as a section condition.
             # Not quite what we want.
             # Try 'extension_name' then.
-            options = self.config.get(name.replace(":", "_"))
-            if options:
-                # Let the extension work on a copy, so it is isolated
-                # from possible changes to the main config.
-                options = deepcopy(options)
+            options = self.config.get(name.replace(":", "_"), {})
+            # Let the extension work on a copy, so it is isolated
+            # from possible changes to the main config.
+            options = deepcopy(options)
             # Instantiate the extension and call it.
             extension = extension_class(name, self.config, options)
             if callable(extension):
