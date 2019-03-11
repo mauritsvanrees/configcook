@@ -3,6 +3,8 @@ from .entrypoints import Entrypoint
 from .utils import call_or_fail
 from .utils import entrypoint_function
 from .utils import substitute
+from .utils import to_lines
+from .utils import to_path
 import logging
 import os
 import sys
@@ -17,6 +19,7 @@ class BaseRecipe(Entrypoint):
     is_recipe = True
 
     def parse_options(self):
+        super(BaseRecipe, self).parse_options()
         self.recipe_name = self.options.get("recipe", "")
 
     @entrypoint_function
@@ -32,10 +35,11 @@ class CommandRecipe(BaseRecipe):
     """Basic configcook recipe that runs one or more commands.
     """
 
+    defaults = {"command": {"parser": to_lines, "required": True}}
+
     @entrypoint_function
     def install(self):
-        cmds = self.require("command").strip().splitlines()
-        for command in cmds:
+        for command in self.options["command"]:
             if not command:
                 continue
             logger.debug("Calling command: %s", command)
@@ -47,11 +51,15 @@ class TemplateRecipe(BaseRecipe):
     """Basic configcook recipe that renders an inline template to a file.
     """
 
+    defaults = {
+        "input": {"required": True},
+        "output": {"parser": to_path, "required": True},
+    }
+
     @entrypoint_function
     def install(self):
-        value = self.require("input")
-        # In output filename, ~ should become /home/maurits.
-        output = os.path.expanduser(self.require("output"))
+        value = self.options["input"]
+        output = self.options["output"]
         # ${configcook:parts} should become a list.
         value = substitute(self.config, value, current_part=self.name)
         with open(output, "w") as outfile:

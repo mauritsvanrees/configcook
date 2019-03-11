@@ -193,6 +193,23 @@ def to_bool(value):
     )
 
 
+def to_lines(value):
+    """Turn a value into a list of lines.
+
+    Difference with to_list is that to_lines can contain whitespace in a line.
+    """
+    if not isinstance(value, six.string_types):
+        raise ValueError("Must be text: %r" % value)
+    return value.strip().splitlines()
+
+
+def to_list(value):
+    """Turn a value into a list."""
+    if not isinstance(value, six.string_types):
+        raise ValueError("Must be text: %r" % value)
+    return value.strip().split()
+
+
 def to_path(value):
     """Turn a value into an absolute path."""
     if not isinstance(value, six.string_types):
@@ -209,7 +226,7 @@ def set_defaults(defaults, options):
     Both must be dictionaries.
     The values of defaults must be dictionaries like this:
     {"default": "bin", "parser": to_path, "required": True},
-    where only "default" is mandatory.
+    where none of the keys are mandatory.
 
     "required" means the key must be in the options,
     AND it must have a true value.  So if the option is there
@@ -223,7 +240,7 @@ def set_defaults(defaults, options):
     This changes the dictionary in-place.  (Or raises an exception.)
     """
     for key, value in defaults.items():
-        default = value["default"]
+        default = value.get("default")
         parser = value.get("parser")
         required = value.get("required", False)
         if key in options:

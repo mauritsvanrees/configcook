@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .entrypoints import Entrypoint
+from .utils import to_list
 import logging
 import pdb
 
@@ -26,9 +27,10 @@ class PDBExtension(BaseExtension):
     """configcook extension that calls pdb.
     """
 
-    def parse_options(self):
-        self.before = self.options.get("before", "").split()
-        self.after = self.options.get("after", "").split()
+    defaults = {
+        "before": {"default": [], "parser": to_list},
+        "after": {"default": [], "parser": to_list},
+    }
 
     def __call__(self):
         pdb.set_trace()
@@ -38,7 +40,7 @@ class PDBExtension(BaseExtension):
 
         instance is the configcook object.
         """
-        if function_name not in self.before:
+        if function_name not in self.options["before"]:
             return
         logger.info(
             "Entered PDB before calling configcook function %s "
@@ -54,7 +56,7 @@ class PDBExtension(BaseExtension):
 
         instance is the configcook object.
         """
-        if function_name not in self.after:
+        if function_name not in self.options["after"]:
             return
         logger.info(
             "Entered PDB after calling configcook function %s "

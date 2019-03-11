@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .utils import entrypoint_function
+from .utils import set_defaults
 import logging
 import sys
 
@@ -15,6 +16,7 @@ class Entrypoint(object):
 
     is_extension = False
     is_recipe = False
+    defaults = {}
 
     def __init__(self, name, config, options):
         self.name = name
@@ -25,23 +27,9 @@ class Entrypoint(object):
     def parse_options(self):
         """Do special handling on options if needed.
         """
-        pass
-
-    def require(self, name):
-        """Require and return the name option.
-
-        Raise an error if the option is not there.
-        Empty is not allowed.
-        """
-        try:
-            value = self.options[name]
-        except KeyError:
-            logger.error("Required option %s is missing from [%s].", name, self.name)
-            sys.exit(1)
-        if not value:
-            logger.error("Required option %s is empty in [%s].", name, self.name)
-            sys.exit(1)
-        return value
+        if not self.defaults:
+            pass
+        set_defaults(self.defaults, self.options)
 
     @property
     @entrypoint_function
@@ -49,5 +37,8 @@ class Entrypoint(object):
         # Look for option 'packages' with fallback to 'eggs'.
         for opt in ("packages", "eggs"):
             if opt in self.options:
-                return self.options[opt].split()
+                value = self.options[opt]
+                if isinstance(value, (list, tuple)):
+                    return value
+                return value.split()
         return []
