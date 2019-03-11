@@ -2,7 +2,9 @@
 from .config import parse_config
 from .utils import call_extensions
 from .utils import call_or_fail
+from .utils import set_defaults
 from .utils import to_bool
+from .utils import to_path
 from copy import deepcopy
 import logging
 import os
@@ -20,11 +22,11 @@ DEFAULTS = {
     # 'allow-hosts': '*',
     # 'allow-picked-versions': 'true',
     # 'allow-unknown-extras': 'false',
-    "bin-directory": "bin",
+    "bin-directory": {"default": "bin", "parser": to_path},
     # 'develop-eggs-directory': 'develop-eggs',
     # 'eggs-directory': 'eggs',
     # 'executable': sys.executable,
-    "fake-buildout": False,
+    "fake-buildout": {"default": False, "parser": to_bool},
     # 'find-links': '',
     # 'install-from-cache': 'false',
     # 'installed': '.installed.cfg',
@@ -81,7 +83,7 @@ class ConfigCook(object):
     def pip(self, *args):
         """Run a pip command."""
         # TODO: read extra pip options from configcook or maybe recipe
-        # section.
+        # section.  And allow setting environment variables?
         cmd = [self.config["configcook"]["pip"]]
         cmd.extend(args)
         # We could append --quiet in the commands that support it,
@@ -305,24 +307,13 @@ class ConfigCook(object):
         self.config is a dict of dicts.
         We can add information, especially to the configcook section.
         """
-        # Set defaults for configcook section.
+        logger.debug("Setting defaults for configcook section.")
         ccc = self.config["configcook"]
-        for key, default in DEFAULTS.items():
-            if key not in ccc:
-                logger.debug("Set [configcook] %s option to default %r.", key, default)
-                ccc[key] = default
-            elif isinstance(default, bool):
-                # Turn the user supplied value into a boolean.
-                ccc[key] = to_bool(ccc[key])
+        set_defaults(DEFAULTS, ccc)
         # TODO: interpolate ${part:name} in all options.
-        # TODO: call os.path.expanduser on all options.
-        # TODO: turn all known paths to real paths.
-        ccc["bin-directory"] = os.path.realpath(
-            os.path.expanduser(ccc["bin-directory"])
-        )
-        ccc["executable"] = os.path.realpath(os.path.expanduser(sys.executable))
-        ccc["configcook-script"] = os.path.realpath(os.path.expanduser(sys.argv[0]))
-        ccc["pip"] = os.path.join(ccc["bin-directory"], "pip")
+        ccc["executable"] = to_path(sys.executable)
+        ccc["configcook-script"] = to_path(sys.argv[0])
+        ccc["pip"] = to_path(os.path.join(ccc["bin-directory"], "pip"))
 
         # Call this last.
         if ccc["fake-buildout"]:

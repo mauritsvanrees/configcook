@@ -167,7 +167,7 @@ def call_extensions(fun):
 
 
 def to_bool(value):
-    """ Very if a value is actually true or false """
+    """Turn a value into True or False."""
     if isinstance(value, bool):
         return value
     if not isinstance(value, six.string_types):
@@ -191,3 +191,56 @@ def to_bool(value):
     raise ValueError(
         "Cannot interpret as boolean, try true/false instead: %r" % orig_value
     )
+
+
+def to_path(value):
+    """Turn a value into an absolute path."""
+    if not isinstance(value, six.string_types):
+        raise ValueError("Must be text: %r" % value)
+    return os.path.realpath(os.path.expanduser(value))
+
+
+def set_defaults(defaults, options):
+    """Add defaults to options.
+
+    options are user-supplied, defaults are from the main configcook,
+    or an extension or a recipe.
+
+    Both must be dictionaries.
+    The values of defaults must be dictionaries like this:
+    {"default": "bin", "parser": to_path, "required": True},
+    where only "default" is mandatory.
+
+    "required" means the key must be in the options,
+    AND it must have a true value.  So if the option is there
+    but is empty, we raise an error.
+    If you want to make an option required but accept an empty value,
+    you should arrange that in your own parser.
+
+    When there is a parser, this may also be applied to the default value:
+    a default "bin" or "~" could be expanded to an absolute path by parser 'to_path'.
+
+    This changes the dictionary in-place.  (Or raises an exception.)
+    """
+    for key, value in defaults.items():
+        default = value["default"]
+        parser = value.get("parser")
+        required = value.get("required", False)
+        if key in options:
+            orig_value = options[key]
+        elif required:
+            raise ValueError("Option {0} is missing.".format(key))
+        else:
+            orig_value = default
+            logger.debug("Set %s option to default %r.", key, default)
+        if parser is None:
+            new_value = orig_value
+        else:
+            new_value = parser(orig_value)
+        if required and not new_value:
+            raise ValueError(
+                "Option {0} is required to be non empty. Got: {1} (parsed as {2}).".format(
+                    key, orig_value, new_value
+                )
+            )
+        options[key] = new_value
