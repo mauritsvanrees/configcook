@@ -24,6 +24,7 @@ long_description = u"\n\n".join(
 if sys.version_info < (3,):
     long_description = long_description.encode("utf-8")
 
+tests_require = ["pytest"]
 
 setup(
     name="configcook",
@@ -54,12 +55,13 @@ setup(
     include_package_data=True,
     zip_safe=True,
     install_requires=["setuptools", "six"],
-    extras_require={},
+    tests_require=tests_require,
+    extras_require={"test": tests_require},
     entry_points={
         "console_scripts": ["configcook = configcook.cli:main"],
         "configcook.extension": [
             "configcook:extension_example = configcook.extensions:ExampleExtension",
-            "configcook:pdb = configcook.extensions:PDBExtension"
+            "configcook:pdb = configcook.extensions:PDBExtension",
         ],
         "configcook.recipe": [
             "configcook:packages = configcook.recipes:BaseRecipe",
