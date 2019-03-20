@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from ._vendor.configparser import parse
+from .utils import to_path
 from copy import deepcopy
 import os
 
@@ -24,6 +25,7 @@ def parse_config(path):
     TODO: support 'extends = path1 path2'
     TODO: support urls
     """
+    path = to_path(path)
     fpname = os.path.basename(path)
     with open(path) as fp:
         result = parse(fp, fpname)

@@ -74,20 +74,39 @@ def test_parse_config():
     try:
         file_path1 = os.path.join(tempdir, "file1.cfg")
         with open(file_path1, "w") as ccfile:
-            ccfile.write("[configcook]")
+            ccfile.write("[configcook]\n")
+            ccfile.write("a = 1")
         with pytest.raises(Exception):
             # This file is not in the current directory.
             # Gives FileNotFoundError on Py3, IOError on Py2.
             parse_config("file1.cfg")
         # absolute path
-        assert parse_config(file_path1) == {"configcook": {}}
+        assert parse_config(file_path1) == {"configcook": {"a": "1"}}
+        assert isinstance(parse_config(file_path1), ConfigCookConfig)
         # in current dir
         os.chdir(tempdir)
-        assert parse_config("file1.cfg") == {"configcook": {}}
+        assert parse_config("file1.cfg") == {"configcook": {"a": "1"}}
         # relative path
         assert parse_config(
             os.path.join(os.pardir, os.path.basename(tempdir), "file1.cfg")
-        ) == {"configcook": {}}
+        ) == {"configcook": {"a": "1"}}
     finally:
         os.chdir(orig_dir)
         shutil.rmtree(tempdir)
+
+
+def test_parse_config_home():
+    from configcook.config import parse_config
+
+    # make temporary file in home dir
+    fd, filepath = tempfile.mkstemp(dir=os.path.expanduser("~"))
+    try:
+        with open(fd, "w") as ccfile:
+            ccfile.write("[configcook]\n")
+            ccfile.write("a = 1")
+        # user should be expanded
+        assert parse_config(os.path.join("~", os.path.basename(filepath))) == {
+            "configcook": {"a": "1"}
+        }
+    finally:
+        os.remove(filepath)
