@@ -125,7 +125,18 @@ def test_parse_config_extends():
         with open(file_path2, "w") as ccfile:
             ccfile.write("[configcook]\nb = 2")
         assert parse_config(file_path1) == {
-            "configcook": {"a": "1", "b": "2", "extends": "file2.cfg"}
+            "configcook": {"a": "1", "b": "2", "extends": ["file2.cfg"]}
+        }
+        file_path3 = os.path.join(tempdir, "file3.cfg")
+        with open(file_path3, "w") as ccfile:
+            ccfile.write("[configcook]\nextends = file1.cfg\nc = 3")
+        assert parse_config(file_path3) == {
+            "configcook": {
+                "a": "1",
+                "b": "2",
+                "c": "3",
+                "extends": ["file1.cfg", "file2.cfg"],
+            }
         }
     finally:
         os.chdir(orig_dir)

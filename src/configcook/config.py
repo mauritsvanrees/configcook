@@ -32,12 +32,15 @@ def parse_config(path):
         result = parse(fp, fpname)
     cc = result.get("configcook")
     if cc:
-        dirname = os.path.dirname(path)
-        for extend in to_list(cc.get("extends", "")):
-            if not os.path.isabs(extend):
-                extend = os.path.join(dirname, extend)
-            extra_result = parse_config(extend)
-            result = _merge_dicts(result, extra_result)
+        extends = cc.get("extends")
+        if extends:
+            cc["extends"] = to_list(extends)
+            dirname = os.path.dirname(path)
+            for extend in cc["extends"]:
+                if not os.path.isabs(extend):
+                    extend = os.path.join(dirname, extend)
+                extra_result = parse_config(extend)
+                result = _merge_dicts(result, extra_result)
     return ConfigCookConfig(result)
 
 
@@ -55,5 +58,15 @@ def _merge_dicts(orig, new):
         if key not in result:
             result[key] = new_value
             continue
-        result[key].update(new_value)
+        # if key == 'configcook' and 'extends' in result.get(key, {}):
+        #     # Take care of extends.
+        #     old_extends = result[key]['extends']
+        if isinstance(new_value, dict):
+            result[key] = _merge_dicts(result[key], new_value)
+        elif isinstance(new_value, list):
+            # likely [configcook] "extends"
+            result[key].extend(new_value)
+        else:
+            # overwriting
+            result[key] = new_value
     return result
