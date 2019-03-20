@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
+import pytest
+import shutil
+import tempfile
 
 
 def test_ConfigCookConfig():
@@ -60,3 +63,31 @@ def test_ConfigCookConfig():
     assert orig.get("c") is None
     assert ccc.get("c") == 42
     assert ccc._raw.get("c") is None
+
+
+def test_parse_config():
+    from configcook.config import ConfigCookConfig
+    from configcook.config import parse_config
+
+    orig_dir = os.getcwd()
+    tempdir = tempfile.mkdtemp()
+    try:
+        file_path1 = os.path.join(tempdir, "file1.cfg")
+        with open(file_path1, "w") as ccfile:
+            ccfile.write("[configcook]")
+        with pytest.raises(Exception):
+            # This file is not in the current directory.
+            # Gives FileNotFoundError on Py3, IOError on Py2.
+            parse_config("file1.cfg")
+        # absolute path
+        assert parse_config(file_path1) == {"configcook": {}}
+        # in current dir
+        os.chdir(tempdir)
+        assert parse_config("file1.cfg") == {"configcook": {}}
+        # relative path
+        assert parse_config(
+            os.path.join(os.pardir, os.path.basename(tempdir), "file1.cfg")
+        ) == {"configcook": {}}
+    finally:
+        os.chdir(orig_dir)
+        shutil.rmtree(tempdir)
