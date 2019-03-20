@@ -60,7 +60,7 @@ def test_to_path_parent():
 def test_to_path_home():
     from configcook.utils import to_path
 
-    home = os.environ.get('HOME')
+    home = os.environ.get("HOME")
     if not home:
         # Cannot test this.
         return
