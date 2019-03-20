@@ -32,7 +32,7 @@ setup(
     classifiers=[
         #   "Development Status :: 1 - Alpha",
         #   "Intended Audience :: Developers",
-        #   "License :: OSI Approved :: GNU General Public License (GPL)",
+        "License :: OSI Approved :: BSD License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
@@ -46,7 +46,7 @@ setup(
     author="Maurits van Rees",
     author_email="maurits@vanrees.org",
     url="https://github.com/mauritsvanrees/configcook",
-    license="GPL",
+    license="BSD",
     packages=find_packages("src"),
     package_dir={"": "src"},
     namespace_packages=[],
