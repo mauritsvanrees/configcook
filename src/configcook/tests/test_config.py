@@ -65,7 +65,7 @@ def test_ConfigCookConfig():
     assert ccc._raw.get("c") is None
 
 
-def test_parse_config():
+def test_parse_config_paths():
     from configcook.config import ConfigCookConfig
     from configcook.config import parse_config
 
@@ -110,3 +110,23 @@ def test_parse_config_home():
         }
     finally:
         os.remove(filepath)
+
+
+def test_parse_config_extends():
+    from configcook.config import parse_config
+
+    orig_dir = os.getcwd()
+    tempdir = tempfile.mkdtemp()
+    try:
+        file_path1 = os.path.join(tempdir, "file1.cfg")
+        with open(file_path1, "w") as ccfile:
+            ccfile.write("[configcook]\nextends = file2.cfg\na = 1")
+        file_path2 = os.path.join(tempdir, "file2.cfg")
+        with open(file_path2, "w") as ccfile:
+            ccfile.write("[configcook]\nb = 2")
+        assert parse_config(file_path1) == {
+            "configcook": {"a": "1", "b": "2", "extends": "file2.cfg"}
+        }
+    finally:
+        os.chdir(orig_dir)
+        shutil.rmtree(tempdir)
