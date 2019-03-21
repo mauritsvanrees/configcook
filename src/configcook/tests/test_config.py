@@ -160,3 +160,31 @@ def test_parse_config_extends():
     finally:
         os.chdir(orig_dir)
         shutil.rmtree(tempdir)
+
+
+def test_merge_dicts():
+    from configcook.config import _merge_dicts as md
+
+    # We do not make inline changes: the result is a new dict.
+    a = {}
+    b = {}
+    assert md(a, b) == {}
+    assert md(a, b) is not a
+    assert md(a, b) is not b
+    # The value of the second dict wins:
+    assert md({"a": "1"}, {"b": "2"}) == {"a": "1", "b": "2"}
+    assert md({"a": "1"}, {"a": "2"}) == {"a": "2"}
+    # Nested dictionaries are handled.
+    assert md({"a": {"a": "1"}}, {"b": {"b": "2"}}) == {
+        "a": {"a": "1"},
+        "b": {"b": "2"},
+    }
+    assert md({"a": {"a": "1"}}, {"a": {"b": "2"}}) == {"a": {"a": "1", "b": "2"}}
+    assert md({"a": {"a": "1"}}, {"a": {"a": "2"}}) == {"a": {"a": "2"}}
+    # Nested lists are handled.
+    assert md({"a": {"a": ["1"]}}, {"b": {"b": ["2"]}}) == {
+        "a": {"a": ["1"]},
+        "b": {"b": ["2"]},
+    }
+    assert md({"a": {"a": ["1"]}}, {"a": {"b": ["2"]}}) == {"a": {"a": ["1"], "b": ["2"]}}
+    assert md({"a": {"a": ["1"]}}, {"a": {"a": ["2"]}}) == {"a": {"a": ["2"]}}

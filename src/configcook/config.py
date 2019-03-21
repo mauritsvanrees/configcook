@@ -66,15 +66,10 @@ def _merge_dicts(orig, new):
         if key not in result:
             result[key] = new_value
             continue
-        # if key == 'configcook' and 'extends' in result.get(key, {}):
-        #     # Take care of extends.
-        #     old_extends = result[key]['extends']
         if isinstance(new_value, dict):
             result[key] = _merge_dicts(result[key], new_value)
-        elif isinstance(new_value, list):
-            # likely [configcook] "extends"
-            result[key].extend(new_value)
         else:
             # overwriting
+            # TODO: handle '+='
             result[key] = new_value
     return result
