@@ -119,6 +119,7 @@ def test_parse_config_extends():
     tempdir = tempfile.mkdtemp()
     try:
         file_path1 = os.path.join(tempdir, "file1.cfg")
+        # file 1 extends file 2
         with open(file_path1, "w") as ccfile:
             ccfile.write("[configcook]\nextends = file2.cfg\na = 1")
         file_path2 = os.path.join(tempdir, "file2.cfg")
@@ -127,6 +128,7 @@ def test_parse_config_extends():
         assert parse_config(file_path1) == {
             "configcook": {"a": "1", "b": "2", "extends": ["file2.cfg"]}
         }
+        # file 3 extends file 1
         file_path3 = os.path.join(tempdir, "file3.cfg")
         with open(file_path3, "w") as ccfile:
             ccfile.write("[configcook]\nextends = file1.cfg\nc = 3")
@@ -136,6 +138,23 @@ def test_parse_config_extends():
                 "b": "2",
                 "c": "3",
                 "extends": ["file1.cfg", "file2.cfg"],
+            }
+        }
+        # file 5 extends file 3 and 4
+        file_path4 = os.path.join(tempdir, "file4.cfg")
+        with open(file_path4, "w") as ccfile:
+            ccfile.write("[configcook]\nd = 4")
+        file_path5 = os.path.join(tempdir, "file5.cfg")
+        with open(file_path5, "w") as ccfile:
+            ccfile.write("[configcook]\nextends = file3.cfg file4.cfg\ne = 5")
+        assert parse_config(file_path5) == {
+            "configcook": {
+                "a": "1",
+                "b": "2",
+                "c": "3",
+                "d": "4",
+                "e": "5",
+                "extends": ["file3.cfg", "file1.cfg", "file2.cfg", "file4.cfg"],
             }
         }
     finally:
