@@ -162,6 +162,28 @@ def test_parse_config_extends():
         shutil.rmtree(tempdir)
 
 
+def test_parse_config_plus():
+    from configcook.config import parse_config
+
+    orig_dir = os.getcwd()
+    tempdir = tempfile.mkdtemp()
+    try:
+        file_path1 = os.path.join(tempdir, "file1.cfg")
+        # file 1 extends file 2
+        with open(file_path1, "w") as ccfile:
+            ccfile.write("[configcook]\nextends = file2.cfg\na = 1")
+        # file 2 adds to a value of file 1
+        file_path2 = os.path.join(tempdir, "file2.cfg")
+        with open(file_path2, "w") as ccfile:
+            ccfile.write("[configcook]\na += 2")
+        assert parse_config(file_path1) == {
+            "configcook": {"a": "1\n2", "extends": ["file2.cfg"]}
+        }
+    finally:
+        os.chdir(orig_dir)
+        shutil.rmtree(tempdir)
+
+
 def test_merge_dicts():
     from configcook.config import _merge_dicts as md
 
@@ -186,5 +208,13 @@ def test_merge_dicts():
         "a": {"a": ["1"]},
         "b": {"b": ["2"]},
     }
-    assert md({"a": {"a": ["1"]}}, {"a": {"b": ["2"]}}) == {"a": {"a": ["1"], "b": ["2"]}}
+    assert md({"a": {"a": ["1"]}}, {"a": {"b": ["2"]}}) == {
+        "a": {"a": ["1"], "b": ["2"]}
+    }
     assert md({"a": {"a": ["1"]}}, {"a": {"a": ["2"]}}) == {"a": {"a": ["2"]}}
+    # We can add to a value with +=.
+    assert md({"a": "1"}, {"a +": "2"}) == {"a": "1\n2"}
+    assert md({"a": "1"}, {"a+": "2"}) == {"a": "1\n2"}
+    assert md({"a": "1"}, {"a       +": "2"}) == {"a": "1\n2"}
+    assert md({"a": "a b"}, {"a +": "c\nd"}) == {"a": "a b\nc\nd"}
+    assert md({"a": "a\nb"}, {"a +": "c d"}) == {"a": "a\nb\nc d"}

@@ -63,6 +63,12 @@ def _merge_dicts(orig, new):
     """
     result = deepcopy(orig)
     for key, new_value in new.items():
+        if key.endswith("+"):
+            # key += value
+            plus = True
+            key = key.rstrip("+").strip()
+        else:
+            plus = False
         if key not in result:
             result[key] = new_value
             continue
@@ -70,6 +76,9 @@ def _merge_dicts(orig, new):
             result[key] = _merge_dicts(result[key], new_value)
         else:
             # overwriting
-            # TODO: handle '+='
-            result[key] = new_value
+            if plus:
+                # a=b amended by a+=c becomes a=b\nc
+                result[key] += "\n" + new_value
+            else:
+                result[key] = new_value
     return result
