@@ -11,14 +11,7 @@ logger = logging.getLogger(__name__)
 
 def parse_options():
     parser = ArgumentParser()
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        dest="verbose",
-        default=False,
-        help="Verbose mode",
-    )
+    # Note: please keep these sorted alphabetically on long form.
     parser.add_argument(
         "-D",
         "--debug",
@@ -27,7 +20,14 @@ def parse_options():
         default=False,
         help="Start Python debugger when exception occurs",
     )
-
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        dest="verbose",
+        default=False,
+        help="Verbose mode",
+    )
     options = parser.parse_args()
     return options
 
