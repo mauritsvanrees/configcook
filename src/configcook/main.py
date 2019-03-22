@@ -70,7 +70,7 @@ class ConfigCook(object):
 
     def _read_config(self):
         logger.debug("Reading config.")
-        self.config = parse_config("cc.cfg")
+        self.config = parse_config(self.options.configfile)
         logger.debug("Sections: %s", ", ".join(self.config.keys()))
         if "configcook" not in self.config:
             logger.error("Section 'configcook' missing from config file.")

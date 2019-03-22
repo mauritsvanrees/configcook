@@ -13,6 +13,14 @@ def parse_options():
     parser = ArgumentParser()
     # Note: please keep these sorted alphabetically on long form.
     parser.add_argument(
+        "-c",
+        "--config",
+        # action="store_true",
+        dest="configfile",
+        default="cc.cfg",
+        help="Config filename to load, if other than cc.cfg",
+    )
+    parser.add_argument(
         "-D",
         "--debug",
         action="store_true",
