@@ -2,9 +2,10 @@
 *.pyc
 *.pyo
 .eggs/
-bin/
-build/
-dist/
-lib-python/
-lib_pypy/
-site-packages/
+/bin/
+/build/
+/dist/
+/include
+/lib-python/
+/lib_pypy/
+/site-packages/
