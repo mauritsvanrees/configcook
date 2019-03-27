@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import pytest
 import sys
 
 
@@ -32,5 +33,21 @@ def test_parse_options():
         sys.argv = "configcook --verbose".split()
         options = parse_options()
         assert options.verbose
+    finally:
+        sys.argv = orig_sys_argv
+
+
+def test_cli_main():
+    from configcook.cli import main
+
+    orig_sys_argv = sys.argv.copy()
+    try:
+        with pytest.raises(SystemExit):
+            # Gives FileNotFoundError on Py3, IOError on Py2.
+            # But this is caught in main.
+            sys.argv = "bin/configcook -c none.cfg".split()
+            main()
+        # TODO: check with "configcook": should find the full script path
+        # with shutil.which.
     finally:
         sys.argv = orig_sys_argv

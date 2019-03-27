@@ -349,7 +349,7 @@ class ConfigCook(object):
                     "%s (%s) is not in [configcook] bin-directory (%r). "
                     "Please create a virtualenv (or similar).",
                     key,
-                    ccc["executable"],
+                    script,
                     bin_dir,
                 )
                 sys.exit(1)
