@@ -42,6 +42,8 @@ def format_command_for_print(command):
     # result.
     # Poor man's argument quoting, sufficient for user information.
     # Used since shlex.quote() does not exist in Python 2.7.
+    if not isinstance(command, (list, tuple)):
+        raise ValueError("Must be list or tuple: %r" % command)
     args = []
     for arg in command:
         if " " in arg:

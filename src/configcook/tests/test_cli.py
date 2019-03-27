@@ -48,6 +48,13 @@ def test_cli_main():
             # But this is caught in main.
             main()
         assert exc.value.code == 1
+        # Same with verbose.
+        sys.argv = "bin/configcook -v -c none.cfg".split()
+        with pytest.raises(SystemExit) as exc:
+            # Gives FileNotFoundError on Py3, IOError on Py2.
+            # But this is caught in main.
+            main()
+        assert exc.value.code == 1
         # Maybe try only "configcook": should find the full script path
         # with shutil.which.  Or actually: probably better to only support
         # bin/configcook, because of our virtualenv requirement.
