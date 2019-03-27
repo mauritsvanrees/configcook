@@ -51,6 +51,8 @@ def test_cli_main():
         # Maybe try only "configcook": should find the full script path
         # with shutil.which.  Or actually: probably better to only support
         # bin/configcook, because of our virtualenv requirement.
+        # Ah: when called with "configcook" as command line,
+        # sys.argv[0] is still the absolute path.
         sys.argv = "bin/configcook --help".split()
         with pytest.raises(SystemExit) as exc:
             main()

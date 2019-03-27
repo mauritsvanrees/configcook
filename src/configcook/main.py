@@ -314,6 +314,13 @@ class ConfigCook(object):
         ccc["executable"] = to_path(sys.executable)
         ccc["configcook-script"] = to_path(sys.argv[0])
         ccc["pip"] = to_path(os.path.join(ccc["bin-directory"], "pip"))
+        configfile = to_path(self.options.configfile)
+        ccc["configfile"] = configfile
+        if '://' in configfile:
+            # a url
+            ccc["base-directory"] = os.getcwd()
+        else:
+            ccc["base-directory"] = os.path.dirname(configfile)
 
         # Call this last.
         if ccc["fake-buildout"]:
@@ -330,6 +337,7 @@ class ConfigCook(object):
         is in that directory too.
         """
         ccc = self.config["configcook"]
+        base_dir = ccc["base-directory"]
         bin_dir = ccc["bin-directory"]
         if not os.path.isdir(bin_dir):
             logger.error(
@@ -345,6 +353,19 @@ class ConfigCook(object):
             script_name = os.path.basename(script)
             # Is the script in the bin dir?
             if script_dir != bin_dir:
+                # Dangerous.
+                if key == "configcook-script" and script_dir.startswith(base_dir):
+                    # When we start with 'python -m configcook' the script may be
+                    # '.../src/configcook/__main__.py'.  That seems acceptable.
+                    logger.debug(
+                        "%s (%s) is not in [configcook] bin-directory (%r). "
+                        "But it is within the base-directory (%r) so we accept it.",
+                        key,
+                        script,
+                        bin_dir,
+                        base_dir,
+                    )
+                    continue
                 logger.error(
                     "%s (%s) is not in [configcook] bin-directory (%r). "
                     "Please create a virtualenv (or similar).",
