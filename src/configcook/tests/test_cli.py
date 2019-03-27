@@ -42,12 +42,18 @@ def test_cli_main():
 
     orig_sys_argv = sys.argv.copy()
     try:
-        with pytest.raises(SystemExit):
+        sys.argv = "bin/configcook -c none.cfg".split()
+        with pytest.raises(SystemExit) as exc:
             # Gives FileNotFoundError on Py3, IOError on Py2.
             # But this is caught in main.
-            sys.argv = "bin/configcook -c none.cfg".split()
             main()
-        # TODO: check with "configcook": should find the full script path
-        # with shutil.which.
+        assert exc.value.code == 1
+        # Maybe try only "configcook": should find the full script path
+        # with shutil.which.  Or actually: probably better to only support
+        # bin/configcook, because of our virtualenv requirement.
+        sys.argv = "bin/configcook --help".split()
+        with pytest.raises(SystemExit) as exc:
+            main()
+        assert exc.value.code == 0
     finally:
         sys.argv = orig_sys_argv
