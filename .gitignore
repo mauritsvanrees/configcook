@@ -2,9 +2,11 @@
 *.pyc
 *.pyo
 .eggs/
+/.coverage
 /bin/
 /build/
 /dist/
+/htmlcov/
 /include
 /lib-python/
 /lib_pypy/

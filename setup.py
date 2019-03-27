@@ -53,7 +53,7 @@ setup(
     include_package_data=True,
     zip_safe=True,
     install_requires=["setuptools", "six"],
-    extras_require={"test": ["pytest"]},
+    extras_require={"test": ["pytest", "pytest-cov"]},
     entry_points={
         "console_scripts": ["configcook = configcook.cli:main"],
         "configcook.extension": [
