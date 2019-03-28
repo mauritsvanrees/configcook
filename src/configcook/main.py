@@ -2,6 +2,7 @@
 from .config import parse_config
 from .utils import call_extensions
 from .utils import call_or_fail
+from .utils import format_command_for_print
 from .utils import set_defaults
 from .utils import to_bool
 from .utils import to_path
@@ -86,6 +87,13 @@ class ConfigCook(object):
         # section.  And allow setting environment variables?
         cmd = [self.config["configcook"]["pip"]]
         cmd.extend(args)
+        if self.options.no_packages and ("install" in args or "uninstall" in args):
+            logger.error(
+                "You want to install, upgrade or uninstall packages, "
+                "but the --no-packages option prevents this. Refused to call command: %s",
+                format_command_for_print(cmd),
+            )
+            sys.exit(1)
         # We could append --quiet in the commands that support it,
         # if self.options.verbose is False, but with 'install'
         # it is a bit too quiet: you don't see anything
@@ -316,7 +324,7 @@ class ConfigCook(object):
         ccc["pip"] = to_path(os.path.join(ccc["bin-directory"], "pip"))
         configfile = to_path(self.options.configfile)
         ccc["configfile"] = configfile
-        if '://' in configfile:
+        if "://" in configfile:
             # a url
             ccc["base-directory"] = os.getcwd()
         else:
@@ -336,6 +344,10 @@ class ConfigCook(object):
         And possibly check that the current configcook script
         is in that directory too.
         """
+        if self.options.no_packages:
+            # We are not touching any packages, so it is safe to skip the virtualenv check.
+            logger.debug("Option --no-packages used, so skipping the virtualenv check.")
+            return
         ccc = self.config["configcook"]
         base_dir = ccc["base-directory"]
         bin_dir = ccc["bin-directory"]

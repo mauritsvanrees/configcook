@@ -29,6 +29,14 @@ def parse_options():
         help="Start Python debugger when exception occurs",
     )
     parser.add_argument(
+        "--no-packages",
+        action="store_true",
+        dest="no_packages",
+        default=False,
+        help="Do not install, upgrade or uninstall Python packages. "
+        "This also means no new extensions or recipes.",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from textwrap import dedent
+import os
 import pytest
 import sys
 
@@ -37,7 +39,7 @@ def test_parse_options():
         sys.argv = orig_sys_argv
 
 
-def test_cli_main():
+def test_cli_main_without_config_file():
     from configcook.cli import main
 
     orig_sys_argv = sys.argv.copy()
@@ -64,5 +66,46 @@ def test_cli_main():
         with pytest.raises(SystemExit) as exc:
             main()
         assert exc.value.code == 0
+    finally:
+        sys.argv = orig_sys_argv
+
+
+def test_cli_main_no_packages(tmp_path):
+    # tmp_path is a pathlib/pathlib2.Path object.
+    from configcook.cli import main
+    from configcook.utils import call_with_output_or_fail
+
+    contents = dedent(
+        """
+[configcook]
+extensions = configcook:extension_example
+parts = test
+
+[test]
+recipe = configcook:command
+command = echo Hello
+"""
+    )
+    str_path = str(tmp_path)
+    os.chdir(str_path)
+    config_file = os.path.join(str_path, "a.cfg")
+    with open(config_file, "w") as cf:
+        cf.write(contents)
+    orig_sys_argv = sys.argv.copy()
+    try:
+        sys.argv = "configcook -c a.cfg".split()
+        with pytest.raises(SystemExit) as exc:
+            # This fails because we are not in a virtualenv.
+            main()
+        assert exc.value.code == 1
+        # We have an extra options that does not install packages,
+        # so we skip the virtualenv check.
+        sys.argv = "configcook --no-packages -c a.cfg".split()
+        main()
+        # I would like to pass 'capsys' from pytest to the test function,
+        # and capture and test the output, but it does not work.
+        # Maybe because I am using PyPy3?
+        # captured = capsys.readouterr()
+        # captured.out == 'foo'
     finally:
         sys.argv = orig_sys_argv
