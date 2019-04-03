@@ -70,28 +70,25 @@ def test_parse_config_paths(tmp_path, safe_working_dir):
     from configcook.config import ConfigCookConfig
     from configcook.config import parse_config
 
-    tempdir = tempfile.mkdtemp()
-    try:
-        file_path1 = os.path.join(tempdir, "file1.cfg")
-        with open(file_path1, "w") as ccfile:
-            ccfile.write("[configcook]\n")
-            ccfile.write("a = 1")
-        with pytest.raises(Exception):
-            # This file is not in the current directory.
-            # Gives FileNotFoundError on Py3, IOError on Py2.
-            parse_config("file1.cfg")
-        # absolute path
-        assert parse_config(file_path1) == {"configcook": {"a": "1"}}
-        assert isinstance(parse_config(file_path1), ConfigCookConfig)
-        # in current dir
-        os.chdir(tempdir)
-        assert parse_config("file1.cfg") == {"configcook": {"a": "1"}}
-        # relative path
-        assert parse_config(
-            os.path.join(os.pardir, os.path.basename(tempdir), "file1.cfg")
-        ) == {"configcook": {"a": "1"}}
-    finally:
-        shutil.rmtree(tempdir)
+    tempdir = str(tmp_path)
+    file_path1 = os.path.join(tempdir, "file1.cfg")
+    with open(file_path1, "w") as ccfile:
+        ccfile.write("[configcook]\n")
+        ccfile.write("a = 1")
+    with pytest.raises(Exception):
+        # This file is not in the current directory.
+        # Gives FileNotFoundError on Py3, IOError on Py2.
+        parse_config("file1.cfg")
+    # absolute path
+    assert parse_config(file_path1) == {"configcook": {"a": "1"}}
+    assert isinstance(parse_config(file_path1), ConfigCookConfig)
+    # in current dir
+    os.chdir(tempdir)
+    assert parse_config("file1.cfg") == {"configcook": {"a": "1"}}
+    # relative path
+    assert parse_config(
+        os.path.join(os.pardir, os.path.basename(tempdir), "file1.cfg")
+    ) == {"configcook": {"a": "1"}}
 
 
 def test_parse_config_home():
@@ -111,72 +108,66 @@ def test_parse_config_home():
         os.remove(filepath)
 
 
-def test_parse_config_extends():
+def test_parse_config_extends(tmp_path):
     from configcook.config import parse_config
 
-    tempdir = tempfile.mkdtemp()
-    try:
-        file_path1 = os.path.join(tempdir, "file1.cfg")
-        # file 1 extends file 2
-        with open(file_path1, "w") as ccfile:
-            ccfile.write("[configcook]\nextends = file2.cfg\na = 1")
-        file_path2 = os.path.join(tempdir, "file2.cfg")
-        with open(file_path2, "w") as ccfile:
-            ccfile.write("[configcook]\nb = 2")
-        assert parse_config(file_path1) == {
-            "configcook": {"a": "1", "b": "2", "extends": ["file2.cfg"]}
+    tempdir = str(tmp_path)
+    file_path1 = os.path.join(tempdir, "file1.cfg")
+    # file 1 extends file 2
+    with open(file_path1, "w") as ccfile:
+        ccfile.write("[configcook]\nextends = file2.cfg\na = 1")
+    file_path2 = os.path.join(tempdir, "file2.cfg")
+    with open(file_path2, "w") as ccfile:
+        ccfile.write("[configcook]\nb = 2")
+    assert parse_config(file_path1) == {
+        "configcook": {"a": "1", "b": "2", "extends": ["file2.cfg"]}
+    }
+    # file 3 extends file 1
+    file_path3 = os.path.join(tempdir, "file3.cfg")
+    with open(file_path3, "w") as ccfile:
+        ccfile.write("[configcook]\nextends = file1.cfg\nc = 3")
+    assert parse_config(file_path3) == {
+        "configcook": {
+            "a": "1",
+            "b": "2",
+            "c": "3",
+            "extends": ["file1.cfg", "file2.cfg"],
         }
-        # file 3 extends file 1
-        file_path3 = os.path.join(tempdir, "file3.cfg")
-        with open(file_path3, "w") as ccfile:
-            ccfile.write("[configcook]\nextends = file1.cfg\nc = 3")
-        assert parse_config(file_path3) == {
-            "configcook": {
-                "a": "1",
-                "b": "2",
-                "c": "3",
-                "extends": ["file1.cfg", "file2.cfg"],
-            }
+    }
+    # file 5 extends file 3 and 4
+    file_path4 = os.path.join(tempdir, "file4.cfg")
+    with open(file_path4, "w") as ccfile:
+        ccfile.write("[configcook]\nd = 4")
+    file_path5 = os.path.join(tempdir, "file5.cfg")
+    with open(file_path5, "w") as ccfile:
+        ccfile.write("[configcook]\nextends = file3.cfg file4.cfg\ne = 5")
+    assert parse_config(file_path5) == {
+        "configcook": {
+            "a": "1",
+            "b": "2",
+            "c": "3",
+            "d": "4",
+            "e": "5",
+            "extends": ["file3.cfg", "file1.cfg", "file2.cfg", "file4.cfg"],
         }
-        # file 5 extends file 3 and 4
-        file_path4 = os.path.join(tempdir, "file4.cfg")
-        with open(file_path4, "w") as ccfile:
-            ccfile.write("[configcook]\nd = 4")
-        file_path5 = os.path.join(tempdir, "file5.cfg")
-        with open(file_path5, "w") as ccfile:
-            ccfile.write("[configcook]\nextends = file3.cfg file4.cfg\ne = 5")
-        assert parse_config(file_path5) == {
-            "configcook": {
-                "a": "1",
-                "b": "2",
-                "c": "3",
-                "d": "4",
-                "e": "5",
-                "extends": ["file3.cfg", "file1.cfg", "file2.cfg", "file4.cfg"],
-            }
-        }
-    finally:
-        shutil.rmtree(tempdir)
+    }
 
 
-def test_parse_config_plus():
+def test_parse_config_plus(tmp_path):
     from configcook.config import parse_config
 
-    tempdir = tempfile.mkdtemp()
-    try:
-        file_path1 = os.path.join(tempdir, "file1.cfg")
-        # file 1 extends file 2
-        with open(file_path1, "w") as ccfile:
-            ccfile.write("[configcook]\nextends = file2.cfg\na = 1")
-        # file 2 adds to a value of file 1
-        file_path2 = os.path.join(tempdir, "file2.cfg")
-        with open(file_path2, "w") as ccfile:
-            ccfile.write("[configcook]\na += 2")
-        assert parse_config(file_path1) == {
-            "configcook": {"a": "1\n2", "extends": ["file2.cfg"]}
-        }
-    finally:
-        shutil.rmtree(tempdir)
+    tempdir = str(tmp_path)
+    file_path1 = os.path.join(tempdir, "file1.cfg")
+    # file 1 extends file 2
+    with open(file_path1, "w") as ccfile:
+        ccfile.write("[configcook]\nextends = file2.cfg\na = 1")
+    # file 2 adds to a value of file 1
+    file_path2 = os.path.join(tempdir, "file2.cfg")
+    with open(file_path2, "w") as ccfile:
+        ccfile.write("[configcook]\na += 2")
+    assert parse_config(file_path1) == {
+        "configcook": {"a": "1\n2", "extends": ["file2.cfg"]}
+    }
 
 
 def test_merge_dicts():
