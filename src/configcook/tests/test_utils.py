@@ -76,7 +76,7 @@ def test_to_path_home():
     assert to_path("~") == home
 
 
-def test_to_path_symlink(tmp_path):
+def test_to_path_symlink(tmp_path, safe_working_dir):
     # tmp_path is a pathlib/pathlib2.Path object.
     from configcook.utils import to_path
 

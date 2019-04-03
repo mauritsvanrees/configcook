@@ -65,11 +65,11 @@ def test_ConfigCookConfig():
     assert ccc._raw.get("c") is None
 
 
-def test_parse_config_paths():
+def test_parse_config_paths(tmp_path, safe_working_dir):
+    # tmp_path is a pathlib/pathlib2.Path object.
     from configcook.config import ConfigCookConfig
     from configcook.config import parse_config
 
-    orig_dir = os.getcwd()
     tempdir = tempfile.mkdtemp()
     try:
         file_path1 = os.path.join(tempdir, "file1.cfg")
@@ -91,7 +91,6 @@ def test_parse_config_paths():
             os.path.join(os.pardir, os.path.basename(tempdir), "file1.cfg")
         ) == {"configcook": {"a": "1"}}
     finally:
-        os.chdir(orig_dir)
         shutil.rmtree(tempdir)
 
 
@@ -115,7 +114,6 @@ def test_parse_config_home():
 def test_parse_config_extends():
     from configcook.config import parse_config
 
-    orig_dir = os.getcwd()
     tempdir = tempfile.mkdtemp()
     try:
         file_path1 = os.path.join(tempdir, "file1.cfg")
@@ -158,14 +156,12 @@ def test_parse_config_extends():
             }
         }
     finally:
-        os.chdir(orig_dir)
         shutil.rmtree(tempdir)
 
 
 def test_parse_config_plus():
     from configcook.config import parse_config
 
-    orig_dir = os.getcwd()
     tempdir = tempfile.mkdtemp()
     try:
         file_path1 = os.path.join(tempdir, "file1.cfg")
@@ -180,7 +176,6 @@ def test_parse_config_plus():
             "configcook": {"a": "1\n2", "extends": ["file2.cfg"]}
         }
     finally:
-        os.chdir(orig_dir)
         shutil.rmtree(tempdir)
 
 

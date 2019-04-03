@@ -62,7 +62,7 @@ def test_cli_main_without_config_file(safe_sys_argv):
     assert exc.value.code == 0
 
 
-def test_cli_main_no_packages(tmp_path, safe_sys_argv):
+def test_cli_main_no_packages(tmp_path, safe_sys_argv, safe_working_dir):
     # tmp_path is a pathlib/pathlib2.Path object.
     from configcook.cli import main
 
