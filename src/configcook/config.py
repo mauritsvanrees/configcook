@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from ._vendor.configparser import parse
+from .utils import substitute
 from .utils import to_list
 from .utils import to_path
 from copy import deepcopy
@@ -18,6 +19,24 @@ class ConfigCookConfig(dict):
     def __init__(self, config):
         super(ConfigCookConfig, self).__init__(config)
         self._raw = deepcopy(config)
+
+    def substitute_all(self):
+        """Substitute/interpolate ${part:name} in all options."""
+        # First interpolate in configcook section?
+        # It might be tricky allow configcook to interpolate from other sections.
+        if "configcook" in self:
+            self.substitute_section("configcook")
+
+    def substitute_section(self, section_name):
+        """Substitute/interpolate ${part:name} in one section."""
+        changed = False
+        section = self[section_name]
+        for key, value in section.items():
+            new_value = substitute(self, value, current_part=section_name)
+            if new_value == value:
+                continue
+            section[key] = new_value
+            changed = True
 
 
 def parse_config(path):

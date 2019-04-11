@@ -306,7 +306,8 @@ class ConfigCook(object):
         logger.debug("Setting defaults for configcook section.")
         ccc = self.config["configcook"]
         set_defaults(DEFAULTS, ccc)
-        # TODO: interpolate ${part:name} in all options.
+
+        # Add extra definitions in the configcook section
         ccc["executable"] = to_path(sys.executable)
         ccc["configcook-script"] = to_path(sys.argv[0])
         ccc["pip"] = to_path(os.path.join(ccc["bin-directory"], "pip"))
@@ -318,11 +319,14 @@ class ConfigCook(object):
         else:
             ccc["base-directory"] = os.path.dirname(configfile)
 
-        # Call this last.
+        # Maybe add buildout section as copy of configcook.
         if ccc["fake-buildout"]:
             # Make the configcook section available under the buildout name.
             # This may improve compatibility between configcook and buildout.
             self.config["buildout"] = ccc
+
+        # Substitute ${part:name} in all options.
+        self.config.substitute_all()
 
     def _check_virtualenv(self):
         """Check that we are in a virtualenv, or similar.

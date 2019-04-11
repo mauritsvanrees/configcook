@@ -21,6 +21,9 @@ def substitute(config, text, current_part=""):
 
     Get the real value from something like ${part:option}.
     """
+    if not isinstance(text, six.string_types):
+        # Nothing to substitute here.
+        return text
     for part, option in substitution_pattern.findall(text):
         template = "${%s:%s}" % (part, option)
         if not part:
