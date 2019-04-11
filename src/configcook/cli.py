@@ -65,8 +65,30 @@ def main():
         import pdb
         import traceback
 
-        traceback.print_exception(*exc_info)
+        # We could use traceback.print_exception to print the exception directly,
+        # but we want to reuse the info later on.
+        tb = traceback.format_exception(*exc_info)
+        show_full_traceback = options.verbose or options.debug
+        if show_full_traceback:
+            # The traceback lines include line endings.
+            print("".join(tb))
         if options.debug:
             sys.stderr.write("\nStarting pdb:\n")
             pdb.post_mortem(exc_info[2])
+
+        # With buildout I have too often seen people overlook a buildout error,
+        # so let's make it really clear here that something is wrong.
+        print("*" * 80)
+        print("***** CONFIGCOOK QUITS WITH AN ERROR!")
+        print("***** Command line was: {0}".format(" ".join(sys.argv)))
+        if not show_full_traceback:
+            print("***** Use 'configcook --verbose' for a more detailed error message.")
+        if options.debug:
+            # If the user did some debugging in pdb, a different error may have been raised.
+            print("***** The original error was:")
+        else:
+            print("***** The error is:")
+        print("*****")
+        # Print the last line of the traceback, which is the main exception message.
+        print("***** {0}".format(tb[-1].strip()))
         sys.exit(1)

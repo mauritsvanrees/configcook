@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from .exceptions import ConfigError
 import functools
 import logging
 import os
@@ -28,8 +29,9 @@ def substitute(config, text, current_part=""):
         try:
             value = config[part][option]
         except KeyError:
-            logger.error("Unable to substitute %r from config", template)
-            sys.exit(1)
+            raise ConfigError(
+                "Unable to substitute '{0}' from config.".format(template)
+            )
         logger.debug("Substituting %r with %r", template, value)
         # TODO: call recursively if needed.
         text = text.replace(template, value)
