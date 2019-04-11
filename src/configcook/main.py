@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 from .config import parse_config
+from .exceptions import ConfigCookError
+from .exceptions import ConfigError
+from .exceptions import LogicError
 from .utils import call_extensions
 from .utils import call_or_fail
 from .utils import format_command_for_print
@@ -74,8 +77,7 @@ class ConfigCook(object):
         self.config = parse_config(self.options.configfile)
         logger.debug("Sections: %s", ", ".join(self.config.keys()))
         if "configcook" not in self.config:
-            logger.error("Section 'configcook' missing from config file.")
-            sys.exit(1)
+            raise ConfigError("Section 'configcook' missing from config file.")
         logger.debug("configcook in sections.")
         self._enhance_config()
         self._check_virtualenv()
@@ -88,12 +90,12 @@ class ConfigCook(object):
         cmd = [self.config["configcook"]["pip"]]
         cmd.extend(args)
         if self.options.no_packages and ("install" in args or "uninstall" in args):
-            logger.error(
+            raise ConfigError(
                 "You want to install, upgrade or uninstall packages, "
-                "but the --no-packages option prevents this. Refused to call command: %s",
-                format_command_for_print(cmd),
+                "but the --no-packages option prevents this. Refused to call command: {0}".format(
+                    format_command_for_print(cmd)
+                )
             )
-            sys.exit(1)
         # We could append --quiet in the commands that support it,
         # if self.options.verbose is False, but with 'install'
         # it is a bit too quiet: you don't see anything
@@ -108,17 +110,14 @@ class ConfigCook(object):
         # Do we want all parts/sections/recipes?
         ccc = self.config["configcook"]
         if "parts" not in ccc:
-            logger.error("Missing parts option in configcook section.")
-            sys.exit(1)
+            raise ConfigError("Missing parts option in configcook section.")
         parts = ccc["parts"].split()
         for part in parts:
             if part not in self.config:
-                logger.error(
-                    "[configcook] parts option has %s, "
-                    "but this is missing from the sections.",
-                    part,
+                raise ConfigError(
+                    "[configcook] parts option has {0}, "
+                    "but this is missing from the sections.".format(part)
                 )
-                sys.exit(1)
             # TODO: check dependencies between parts.
             self._part_names.append(part)
             self._load_part(part)
@@ -126,11 +125,9 @@ class ConfigCook(object):
     def _find_and_install_packages(self, extensions=False, recipes=False):
         """Install packages from self.extensions or self.recipes."""
         if not (extensions or recipes):
-            logger.error("Either extensions or recipes should be True.")
-            sys.exit(1)
+            raise LogicError("Either extensions or recipes should be True.")
         if extensions and recipes:
-            logger.error("extensions or recipes cannot both be True.")
-            sys.exit(1)
+            raise LogicError("extensions or recipes cannot both be True.")
         if extensions:
             sources = self.extensions
         else:
@@ -214,7 +211,7 @@ class ConfigCook(object):
 
     def _load_extension(self, name):
         logger.debug("Loading extension %s.", name)
-        # This will either find an entrypoint or sys.exit(1).
+        # This will either find an entrypoint or raise an exception.
         entrypoint = self._find_extension_entrypoint(name)
         # Load the entrypoint class.
         extension_class = entrypoint.load()
@@ -244,25 +241,17 @@ class ConfigCook(object):
             pass
         else:
             # TODO: check dist.version.
-            logger.error(
-                "We have package %s but could not find a %s entrypoint "
-                "with name %s.",
-                package_name,
-                group,
-                name,
+            raise ConfigCookError(
+                "We have package {0} but could not find a {1} entrypoint "
+                "with name {2}.".format(package_name, group, name)
             )
-            sys.exit(1)
         if not install:
             # We either do not want to allow installing at all, or this is
             # the second time we are called, and it has not helped.
-            logger.error(
-                "We cannot install a package %s to find a "
-                "%s entrypoint with name %s.",
-                package_name,
-                group,
-                name,
+            raise ConfigCookError(
+                "We cannot install a package {0} to find a "
+                "{1} entrypoint with name {2}".format(package_name, group, name)
             )
-            sys.exit(1)
         logger.debug("We do not yet have a %s entrypoint with name %s.", group, name)
         logger.info("Trying to install package %s.", package_name)
         self.pip("install", package_name)
@@ -290,7 +279,7 @@ class ConfigCook(object):
 
     def _load_recipe(self, name):
         logger.debug("Loading recipe %s.", name)
-        # This will either find an entrypoint or sys.exit(1).
+        # This will either find an entrypoint or raise an exception.
         entrypoint = self._find_recipe_entrypoint(name)
         # Load the entrypoint class.
         recipe_class = entrypoint.load()
@@ -300,8 +289,7 @@ class ConfigCook(object):
     def _load_part(self, name):
         options = self.config[name]
         if "recipe" not in options:
-            logger.error("recipe option missing from %s section", name)
-            sys.exit(1)
+            raise ConfigError("recipe option missing from {0} section".format(name))
         recipe_name = options["recipe"]
         recipe_class = self._load_recipe(recipe_name)
         # Instantiate the recipe.
@@ -352,12 +340,10 @@ class ConfigCook(object):
         base_dir = ccc["base-directory"]
         bin_dir = ccc["bin-directory"]
         if not os.path.isdir(bin_dir):
-            logger.error(
-                "[configcook] bin-directory (%r) does not exist or is not "
-                "a directory. Please create a virtualenv (or similar).",
-                bin_dir,
+            raise ConfigCookError(
+                "[configcook] bin-directory ({0}) does not exist or is not "
+                "a directory. Please create a virtualenv (or similar).".format(bin_dir)
             )
-            sys.exit(1)
         bin_contents = os.listdir(bin_dir)
         for key in ("executable", "pip", "configcook-script"):
             script = ccc[key]
@@ -378,20 +364,17 @@ class ConfigCook(object):
                         base_dir,
                     )
                     continue
-                logger.error(
-                    "%s (%s) is not in [configcook] bin-directory (%r). "
-                    "Please create a virtualenv (or similar).",
-                    key,
-                    script,
-                    bin_dir,
+                raise ConfigCookError(
+                    "{0} ({1}) is not in [configcook] bin-directory ({2}). "
+                    "Please create a virtualenv (or similar).".format(
+                        key, script, bin_dir
+                    )
                 )
-                sys.exit(1)
             # Does the script exist?
             if script_name not in bin_contents:
-                logger.error(
-                    "[configcook] bin-directory (%r) misses a %s script. "
-                    "Please create a virtualenv (or similar).",
-                    bin_dir,
-                    script_name,
+                raise ConfigCookError(
+                    "[configcook] bin-directory ({0}) misses a {1} script. "
+                    "Please create a virtualenv (or similar).".format(
+                        bin_dir, script_name
+                    )
                 )
-                sys.exit(1)
