@@ -91,4 +91,7 @@ def main():
         print("*****")
         # Print the last line of the traceback, which is the main exception message.
         print("***** {0}".format(tb[-1].strip()))
+        # Note: if you end up here because you ran "pytest --pdb" and the sys.exit is not expected,
+        # then you may want to start a pdb on the original exception:
+        # pdb.post_mortem(exc_info[2])
         sys.exit(1)
