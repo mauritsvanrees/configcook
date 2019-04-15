@@ -5,7 +5,7 @@ import shutil
 import tempfile
 
 
-def test_ConfigCookConfig():
+def test_ConfigCookConfig_is_dict_like():
     from configcook.config import ConfigCookConfig
 
     # The basic structure is the same as a dict.
@@ -63,6 +63,26 @@ def test_ConfigCookConfig():
     assert orig.get("c") is None
     assert ccc.get("c") == 42
     assert ccc._raw.get("c") is None
+
+
+def test_ConfigCookConfig_substitute():
+    from configcook.config import ConfigCookConfig
+
+    conf = {
+        "A": {
+            "a": "${:b}",
+            "b": "value of b",
+        }
+    }
+    cooked = ConfigCookConfig(conf)
+    cooked.substitute_all()
+    assert cooked == {
+        "A": {
+            "a": "value of b",
+            "b": "value of b",
+        }
+    }
+
 
 
 def test_parse_config_paths(tmp_path, safe_working_dir):

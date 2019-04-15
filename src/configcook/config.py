@@ -24,8 +24,11 @@ class ConfigCookConfig(dict):
         """Substitute/interpolate ${part:name} in all options."""
         # First interpolate in configcook section?
         # It might be tricky allow configcook to interpolate from other sections.
-        if "configcook" in self:
-            self.substitute_section("configcook")
+        # if "configcook" in self:
+        #     self.substitute_section("configcook")
+        for key in self:
+            self.substitute_section(key)
+
 
     def substitute_section(self, section_name):
         """Substitute/interpolate ${part:name} in one section."""
