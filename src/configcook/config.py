@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from ._vendor.configparser import parse
 from .exceptions import ConfigError
 from .utils import substitute
 from .utils import to_list
@@ -41,38 +40,6 @@ class ConfigCookConfig(dict):
                 continue
             section[key] = new_value
             changed = True
-
-
-def parse_config(path):
-    """Parse config with the configparser from zc.buildout.
-
-    TODO: support 'extends = path1 path2'
-    TODO: support urls
-    """
-    path = to_path(path)
-    fpname = os.path.basename(path)
-    with open(path) as fp:
-        result = parse(fp, fpname)
-    cc = result.get("configcook")
-    if cc:
-        extends = cc.get("extends")
-        if extends:
-            dirname = os.path.dirname(path)
-            cc["extends"] = to_list(extends)
-            # Build a new extends line that gets the correct order
-            # for nested extends.
-            new_extends = []
-            for extend in cc["extends"]:
-                new_extends.append(extend)
-                if not os.path.isabs(extend):
-                    extend = os.path.join(dirname, extend)
-                extra_result = parse_config(extend)
-                new_extends.extend(
-                    extra_result.get("configcook", {}).get("extends", [])
-                )
-                result = _merge_dicts(result, extra_result)
-            result["configcook"]["extends"] = new_extends
-    return ConfigCookConfig(result)
 
 
 def parse_toml_config(path):
