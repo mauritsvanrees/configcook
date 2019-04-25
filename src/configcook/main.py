@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .config import parse_config
+from .config import parse_toml_config
 from .exceptions import ConfigCookError
 from .exceptions import ConfigError
 from .exceptions import LogicError
@@ -74,7 +74,7 @@ class ConfigCook(object):
 
     def _read_config(self):
         logger.debug("Reading config.")
-        self.config = parse_config(self.options.configfile)
+        self.config = parse_toml_config(self.options.configfile)
         logger.debug("Sections: %s", ", ".join(self.config.keys()))
         if "configcook" not in self.config:
             raise ConfigError("Section 'configcook' missing from config file.")
@@ -111,7 +111,11 @@ class ConfigCook(object):
         ccc = self.config["configcook"]
         if "parts" not in ccc:
             raise ConfigError("Missing parts option in configcook section.")
-        parts = ccc["parts"].split()
+        parts = ccc["parts"]
+        if not isinstance(parts, list):
+            # We could turn "item1" into ["item1"] but we choose not too.
+            # Would give problems with  "parts+"="item2" which could become "item1item2".
+            raise ConfigError("parts option in configcook section must be a list.")
         for part in parts:
             if part not in self.config:
                 raise ConfigError(
