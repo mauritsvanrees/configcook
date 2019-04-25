@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from ._vendor.configparser import parse
+from .exceptions import ConfigError
 from .utils import substitute
 from .utils import to_list
 from .utils import to_path
@@ -97,7 +98,7 @@ def parse_toml_config(path):
                 new_extends.append(extend)
                 if not os.path.isabs(extend):
                     extend = os.path.join(dirname, extend)
-                extra_result = parse_config(extend)
+                extra_result = parse_toml_config(extend)
                 new_extends.extend(
                     extra_result.get("configcook", {}).get("extends", [])
                 )
@@ -113,7 +114,39 @@ def _merge_dicts(orig, new):
     We are talking about dictionaries that contain dictionaries,
     which means orig.update(new) will not work.
 
-    TODO: handle key += value
+    We allow appending to values, like zc.buildout does.
+    With buildout we have this:
+
+    a=b amended by a+=c becomes a=b\nc
+
+    With toml, this must be different.
+    Lists are pretty simple, we might want to require them:
+
+    a=["b"] amended by "a+"=["c"] becomes a=["b", "c"]
+
+    Note the "a+" quoted key, otherwise you get a parse error.
+
+    Theoretically we could allow other values.
+    For strings this could be a source of surprise for users.
+    But could still be useful:
+
+    base.toml:       title="Site"
+    testing.toml:    "title+"=" testing"
+    production.toml: "title+"=" production"
+    On testing    this would become title="Site testing"
+    On production this would become title="Site production"
+
+    For integers (and floats) this could actually be useful.
+    port=8080 amended by "port+"=100 becomes port=8180
+
+    Booleans would work too:
+
+    switch=False    -> False
+    "switch+"=False -> 0
+    "switch+"=True  -> 1
+
+    As long as the two values have the same type, this seems safe.
+
     """
     result = deepcopy(orig)
     for key, new_value in new.items():
@@ -131,8 +164,13 @@ def _merge_dicts(orig, new):
         else:
             # overwriting
             if plus:
-                # a=b amended by a+=c becomes a=b\nc
-                result[key] += "\n" + new_value
+                if type(result[key]) != type(new_value):
+                    raise ConfigError(
+                        "Conflicting types when adding to key {0}: cannot add {1} and {2}.".format(
+                            key, type(result[key]), type(new_value)
+                        )
+                    )
+                result[key] += new_value
             else:
                 result[key] = new_value
     return result

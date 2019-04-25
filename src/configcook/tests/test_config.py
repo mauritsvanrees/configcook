@@ -89,15 +89,15 @@ def test_parse_toml_config_paths(tmp_path, safe_working_dir):
         # Gives FileNotFoundError on Py3, IOError on Py2.
         parse_toml_config("file1.toml")
     # absolute path
-    assert parse_toml_config(file_path1) == {"configcook": {"a": "1"}}
+    assert parse_toml_config(file_path1) == {"configcook": {"a": 1}}
     assert isinstance(parse_toml_config(file_path1), ConfigCookConfig)
     # in current dir
     os.chdir(tempdir)
-    assert parse_toml_config("file1.toml") == {"configcook": {"a": "1"}}
+    assert parse_toml_config("file1.toml") == {"configcook": {"a": 1}}
     # relative path
     assert parse_toml_config(
         os.path.join(os.pardir, os.path.basename(tempdir), "file1.toml")
-    ) == {"configcook": {"a": "1"}}
+    ) == {"configcook": {"a": 1}}
 
 
 def test_parse_toml_config_home():
@@ -111,7 +111,7 @@ def test_parse_toml_config_home():
             ccfile.write("a = 1")
         # user should be expanded
         assert parse_toml_config(os.path.join("~", os.path.basename(filepath))) == {
-            "configcook": {"a": "1"}
+            "configcook": {"a": 1}
         }
     finally:
         os.remove(filepath)
@@ -124,63 +124,93 @@ def test_parse_toml_config_extends(tmp_path):
     file_path1 = os.path.join(tempdir, "file1.toml")
     # file 1 extends file 2
     with open(file_path1, "w") as ccfile:
-        ccfile.write("[configcook]\nextends = file2.toml\na = 1")
+        ccfile.write("[configcook]\nextends = 'file2.toml'\na = 1")
     file_path2 = os.path.join(tempdir, "file2.toml")
     with open(file_path2, "w") as ccfile:
         ccfile.write("[configcook]\nb = 2")
     assert parse_toml_config(file_path1) == {
-        "configcook": {"a": "1", "b": "2", "extends": ["file2.toml"]}
+        "configcook": {"a": 1, "b": 2, "extends": ["file2.toml"]}
     }
     # file 3 extends file 1
     file_path3 = os.path.join(tempdir, "file3.toml")
     with open(file_path3, "w") as ccfile:
-        ccfile.write("[configcook]\nextends = file1.toml\nc = 3")
+        ccfile.write('[configcook]\nextends = "file1.toml"\nc = 3')
     assert parse_toml_config(file_path3) == {
-        "configcook": {
-            "a": "1",
-            "b": "2",
-            "c": "3",
-            "extends": ["file1.toml", "file2.toml"],
-        }
+        "configcook": {"a": 1, "b": 2, "c": 3, "extends": ["file1.toml", "file2.toml"]}
     }
     # file 5 extends file 3 and 4
     file_path4 = os.path.join(tempdir, "file4.toml")
     with open(file_path4, "w") as ccfile:
-        ccfile.write("[configcook]\nd = 4")
+        ccfile.write("[configcook]\nd = 'four'")
     file_path5 = os.path.join(tempdir, "file5.toml")
     with open(file_path5, "w") as ccfile:
-        ccfile.write("[configcook]\nextends = file3.toml file4.toml\ne = 5")
+        ccfile.write('[configcook]\nextends = ["file3.toml", "file4.toml"]\ne = 5')
     assert parse_toml_config(file_path5) == {
         "configcook": {
-            "a": "1",
-            "b": "2",
-            "c": "3",
-            "d": "4",
-            "e": "5",
+            "a": 1,
+            "b": 2,
+            "c": 3,
+            "d": "four",
+            "e": 5,
             "extends": ["file3.toml", "file1.toml", "file2.toml", "file4.toml"],
         }
     }
 
 
-def test_parse_toml_config_plus(tmp_path):
+def test_parse_toml_config_plus_integer(tmp_path):
     from configcook.config import parse_toml_config
 
     tempdir = str(tmp_path)
     file_path1 = os.path.join(tempdir, "file1.toml")
     # file 1 extends file 2
     with open(file_path1, "w") as ccfile:
-        ccfile.write("[configcook]\nextends = file2.toml\na = 1")
+        ccfile.write('[configcook]\nextends = "file2.toml"\na = 1')
     # file 2 adds to a value of file 1
     file_path2 = os.path.join(tempdir, "file2.toml")
     with open(file_path2, "w") as ccfile:
-        ccfile.write("[configcook]\na += 2")
+        ccfile.write('[configcook]\n"a+" = 2')
     assert parse_toml_config(file_path1) == {
-        "configcook": {"a": "1\n2", "extends": ["file2.toml"]}
+        "configcook": {"a": 3, "extends": ["file2.toml"]}
+    }
+
+
+def test_parse_toml_config_plus_list(tmp_path):
+    from configcook.config import parse_toml_config
+
+    tempdir = str(tmp_path)
+    file_path1 = os.path.join(tempdir, "file1.toml")
+    # file 1 extends file 2
+    with open(file_path1, "w") as ccfile:
+        ccfile.write('[configcook]\nextends = "file2.toml"\na = ["one"]')
+    # file 2 adds to a value of file 1
+    file_path2 = os.path.join(tempdir, "file2.toml")
+    with open(file_path2, "w") as ccfile:
+        ccfile.write('[configcook]\n"a+" = ["two"]')
+    assert parse_toml_config(file_path1) == {
+        "configcook": {"a": ["one", "two"], "extends": ["file2.toml"]}
+    }
+
+
+def test_parse_toml_config_plus_string(tmp_path):
+    from configcook.config import parse_toml_config
+
+    tempdir = str(tmp_path)
+    file_path1 = os.path.join(tempdir, "file1.toml")
+    # file 1 extends file 2
+    with open(file_path1, "w") as ccfile:
+        ccfile.write('[configcook]\nextends = "file2.toml"\na = "one"')
+    # file 2 adds to a value of file 1
+    file_path2 = os.path.join(tempdir, "file2.toml")
+    with open(file_path2, "w") as ccfile:
+        ccfile.write('[configcook]\n"a+" = "two"')
+    assert parse_toml_config(file_path1) == {
+        "configcook": {"a": "onetwo", "extends": ["file2.toml"]}
     }
 
 
 def test_merge_dicts():
     from configcook.config import _merge_dicts as md
+    from configcook.exceptions import ConfigError
 
     # We do not make inline changes: the result is a new dict.
     a = {}
@@ -207,9 +237,28 @@ def test_merge_dicts():
         "a": {"a": ["1"], "b": ["2"]}
     }
     assert md({"a": {"a": ["1"]}}, {"a": {"a": ["2"]}}) == {"a": {"a": ["2"]}}
-    # We can add to a value with +=.
-    assert md({"a": "1"}, {"a +": "2"}) == {"a": "1\n2"}
-    assert md({"a": "1"}, {"a+": "2"}) == {"a": "1\n2"}
-    assert md({"a": "1"}, {"a       +": "2"}) == {"a": "1\n2"}
-    assert md({"a": "a b"}, {"a +": "c\nd"}) == {"a": "a b\nc\nd"}
-    assert md({"a": "a\nb"}, {"a +": "c d"}) == {"a": "a\nb\nc d"}
+    # We can add integers with +=.
+    assert md({"a": 1}, {"a +": 2}) == {"a": 3}
+    assert md({"a": 1}, {"a+": 2}) == {"a": 3}
+    assert md({"a": 1}, {"a       +": 2}) == {"a": 3}
+    # We can add floats with +=.
+    assert md({"a": 1.2}, {"a +": 3.4}) == {"a": 4.6}
+    # We can add strings with +=.
+    assert md({"a": "a b"}, {"a +": "c\nd"}) == {"a": "a bc\nd"}
+    assert md({"a": "a\nb"}, {"a +": "c d"}) == {"a": "a\nbc d"}
+    # We can add lists with +=.
+    assert md({"a": ["a", "b"]}, {"a +": ["c\nd"]}) == {"a": ["a", "b", "c\nd"]}
+    # We can add booleans with +=.
+    assert md({"a": False}, {"a +": False}) == {"a": 0}
+    assert md({"a": False}, {"a +": True}) == {"a": 1}
+    assert md({"a": True}, {"a +": False}) == {"a": 1}
+    assert md({"a": True}, {"a +": True}) == {"a": 2}
+    # We cannot add different types with +=.
+    with pytest.raises(ConfigError):
+        md({"a": 1}, {"a +": "2"})
+    with pytest.raises(ConfigError):
+        md({"a": 1}, {"a +": 1.0})
+    with pytest.raises(ConfigError):
+        md({"a": "1"}, {"a +": ["2"]})
+    with pytest.raises(ConfigError):
+        md({"a": 1}, {"a +": False})

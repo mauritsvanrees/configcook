@@ -41,9 +41,10 @@ def test_to_list():
     assert to_list("hello") == ["hello"]
     assert to_list("hello world") == ["hello", "world"]
     assert to_list("there\nand back again") == ["there", "and", "back", "again"]
+    assert to_list([]) == []
     with pytest.raises(ValueError):
-        # must be text
-        to_list([])
+        # Must be text or already a list, not even a tuple.
+        to_list(())
 
 
 def test_to_lines():
