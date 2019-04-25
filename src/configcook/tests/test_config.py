@@ -68,51 +68,40 @@ def test_ConfigCookConfig_is_dict_like():
 def test_ConfigCookConfig_substitute():
     from configcook.config import ConfigCookConfig
 
-    conf = {
-        "A": {
-            "a": "${:b}",
-            "b": "value of b",
-        }
-    }
+    conf = {"A": {"a": "${:b}", "b": "value of b"}}
     cooked = ConfigCookConfig(conf)
     cooked.substitute_all()
-    assert cooked == {
-        "A": {
-            "a": "value of b",
-            "b": "value of b",
-        }
-    }
+    assert cooked == {"A": {"a": "value of b", "b": "value of b"}}
 
 
-
-def test_parse_config_paths(tmp_path, safe_working_dir):
+def test_parse_toml_config_paths(tmp_path, safe_working_dir):
     # tmp_path is a pathlib/pathlib2.Path object.
     from configcook.config import ConfigCookConfig
-    from configcook.config import parse_config
+    from configcook.config import parse_toml_config
 
     tempdir = str(tmp_path)
-    file_path1 = os.path.join(tempdir, "file1.cfg")
+    file_path1 = os.path.join(tempdir, "file1.toml")
     with open(file_path1, "w") as ccfile:
         ccfile.write("[configcook]\n")
         ccfile.write("a = 1")
     with pytest.raises(Exception):
         # This file is not in the current directory.
         # Gives FileNotFoundError on Py3, IOError on Py2.
-        parse_config("file1.cfg")
+        parse_toml_config("file1.toml")
     # absolute path
-    assert parse_config(file_path1) == {"configcook": {"a": "1"}}
-    assert isinstance(parse_config(file_path1), ConfigCookConfig)
+    assert parse_toml_config(file_path1) == {"configcook": {"a": "1"}}
+    assert isinstance(parse_toml_config(file_path1), ConfigCookConfig)
     # in current dir
     os.chdir(tempdir)
-    assert parse_config("file1.cfg") == {"configcook": {"a": "1"}}
+    assert parse_toml_config("file1.toml") == {"configcook": {"a": "1"}}
     # relative path
-    assert parse_config(
-        os.path.join(os.pardir, os.path.basename(tempdir), "file1.cfg")
+    assert parse_toml_config(
+        os.path.join(os.pardir, os.path.basename(tempdir), "file1.toml")
     ) == {"configcook": {"a": "1"}}
 
 
-def test_parse_config_home():
-    from configcook.config import parse_config
+def test_parse_toml_config_home():
+    from configcook.config import parse_toml_config
 
     # make temporary file in home dir
     fd, filepath = tempfile.mkstemp(dir=os.path.expanduser("~"))
@@ -121,72 +110,72 @@ def test_parse_config_home():
             ccfile.write("[configcook]\n")
             ccfile.write("a = 1")
         # user should be expanded
-        assert parse_config(os.path.join("~", os.path.basename(filepath))) == {
+        assert parse_toml_config(os.path.join("~", os.path.basename(filepath))) == {
             "configcook": {"a": "1"}
         }
     finally:
         os.remove(filepath)
 
 
-def test_parse_config_extends(tmp_path):
-    from configcook.config import parse_config
+def test_parse_toml_config_extends(tmp_path):
+    from configcook.config import parse_toml_config
 
     tempdir = str(tmp_path)
-    file_path1 = os.path.join(tempdir, "file1.cfg")
+    file_path1 = os.path.join(tempdir, "file1.toml")
     # file 1 extends file 2
     with open(file_path1, "w") as ccfile:
-        ccfile.write("[configcook]\nextends = file2.cfg\na = 1")
-    file_path2 = os.path.join(tempdir, "file2.cfg")
+        ccfile.write("[configcook]\nextends = file2.toml\na = 1")
+    file_path2 = os.path.join(tempdir, "file2.toml")
     with open(file_path2, "w") as ccfile:
         ccfile.write("[configcook]\nb = 2")
-    assert parse_config(file_path1) == {
-        "configcook": {"a": "1", "b": "2", "extends": ["file2.cfg"]}
+    assert parse_toml_config(file_path1) == {
+        "configcook": {"a": "1", "b": "2", "extends": ["file2.toml"]}
     }
     # file 3 extends file 1
-    file_path3 = os.path.join(tempdir, "file3.cfg")
+    file_path3 = os.path.join(tempdir, "file3.toml")
     with open(file_path3, "w") as ccfile:
-        ccfile.write("[configcook]\nextends = file1.cfg\nc = 3")
-    assert parse_config(file_path3) == {
+        ccfile.write("[configcook]\nextends = file1.toml\nc = 3")
+    assert parse_toml_config(file_path3) == {
         "configcook": {
             "a": "1",
             "b": "2",
             "c": "3",
-            "extends": ["file1.cfg", "file2.cfg"],
+            "extends": ["file1.toml", "file2.toml"],
         }
     }
     # file 5 extends file 3 and 4
-    file_path4 = os.path.join(tempdir, "file4.cfg")
+    file_path4 = os.path.join(tempdir, "file4.toml")
     with open(file_path4, "w") as ccfile:
         ccfile.write("[configcook]\nd = 4")
-    file_path5 = os.path.join(tempdir, "file5.cfg")
+    file_path5 = os.path.join(tempdir, "file5.toml")
     with open(file_path5, "w") as ccfile:
-        ccfile.write("[configcook]\nextends = file3.cfg file4.cfg\ne = 5")
-    assert parse_config(file_path5) == {
+        ccfile.write("[configcook]\nextends = file3.toml file4.toml\ne = 5")
+    assert parse_toml_config(file_path5) == {
         "configcook": {
             "a": "1",
             "b": "2",
             "c": "3",
             "d": "4",
             "e": "5",
-            "extends": ["file3.cfg", "file1.cfg", "file2.cfg", "file4.cfg"],
+            "extends": ["file3.toml", "file1.toml", "file2.toml", "file4.toml"],
         }
     }
 
 
-def test_parse_config_plus(tmp_path):
-    from configcook.config import parse_config
+def test_parse_toml_config_plus(tmp_path):
+    from configcook.config import parse_toml_config
 
     tempdir = str(tmp_path)
-    file_path1 = os.path.join(tempdir, "file1.cfg")
+    file_path1 = os.path.join(tempdir, "file1.toml")
     # file 1 extends file 2
     with open(file_path1, "w") as ccfile:
-        ccfile.write("[configcook]\nextends = file2.cfg\na = 1")
+        ccfile.write("[configcook]\nextends = file2.toml\na = 1")
     # file 2 adds to a value of file 1
-    file_path2 = os.path.join(tempdir, "file2.cfg")
+    file_path2 = os.path.join(tempdir, "file2.toml")
     with open(file_path2, "w") as ccfile:
         ccfile.write("[configcook]\na += 2")
-    assert parse_config(file_path1) == {
-        "configcook": {"a": "1\n2", "extends": ["file2.cfg"]}
+    assert parse_toml_config(file_path1) == {
+        "configcook": {"a": "1\n2", "extends": ["file2.toml"]}
     }
 
 

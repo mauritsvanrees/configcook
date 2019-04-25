@@ -52,7 +52,7 @@ setup(
     namespace_packages=[],
     include_package_data=True,
     zip_safe=True,
-    install_requires=["setuptools", "six"],
+    install_requires=["setuptools", "six", "toml"],
     extras_require={"test": ["pytest", "pytest-cov"]},
     entry_points={
         "console_scripts": ["configcook = configcook.cli:main"],

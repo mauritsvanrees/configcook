@@ -5,6 +5,7 @@ from .utils import to_list
 from .utils import to_path
 from copy import deepcopy
 import os
+import toml
 
 
 class ConfigCookConfig(dict):
@@ -29,7 +30,6 @@ class ConfigCookConfig(dict):
         for key in self:
             self.substitute_section(key)
 
-
     def substitute_section(self, section_name):
         """Substitute/interpolate ${part:name} in one section."""
         changed = False
@@ -52,6 +52,38 @@ def parse_config(path):
     fpname = os.path.basename(path)
     with open(path) as fp:
         result = parse(fp, fpname)
+    cc = result.get("configcook")
+    if cc:
+        extends = cc.get("extends")
+        if extends:
+            dirname = os.path.dirname(path)
+            cc["extends"] = to_list(extends)
+            # Build a new extends line that gets the correct order
+            # for nested extends.
+            new_extends = []
+            for extend in cc["extends"]:
+                new_extends.append(extend)
+                if not os.path.isabs(extend):
+                    extend = os.path.join(dirname, extend)
+                extra_result = parse_config(extend)
+                new_extends.extend(
+                    extra_result.get("configcook", {}).get("extends", [])
+                )
+                result = _merge_dicts(result, extra_result)
+            result["configcook"]["extends"] = new_extends
+    return ConfigCookConfig(result)
+
+
+def parse_toml_config(path):
+    """Parse config with toml.
+
+    TODO: support 'extends = path1 path2'
+    TODO: support urls
+    """
+    path = to_path(path)
+    fpname = os.path.basename(path)
+    with open(path) as fp:
+        result = toml.load(fp)
     cc = result.get("configcook")
     if cc:
         extends = cc.get("extends")
