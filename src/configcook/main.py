@@ -7,7 +7,6 @@ from .utils import call_extensions
 from .utils import call_or_fail
 from .utils import format_command_for_print
 from .utils import set_defaults
-from .utils import to_bool
 from .utils import to_path
 from copy import deepcopy
 import logging
