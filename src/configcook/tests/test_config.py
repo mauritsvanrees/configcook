@@ -124,7 +124,7 @@ def test_parse_toml_config_extends(tmp_path):
     file_path1 = os.path.join(tempdir, "file1.toml")
     # file 1 extends file 2
     with open(file_path1, "w") as ccfile:
-        ccfile.write("[configcook]\nextends = 'file2.toml'\na = 1")
+        ccfile.write("[configcook]\nextends = ['file2.toml']\na = 1")
     file_path2 = os.path.join(tempdir, "file2.toml")
     with open(file_path2, "w") as ccfile:
         ccfile.write("[configcook]\nb = 2")
@@ -134,7 +134,7 @@ def test_parse_toml_config_extends(tmp_path):
     # file 3 extends file 1
     file_path3 = os.path.join(tempdir, "file3.toml")
     with open(file_path3, "w") as ccfile:
-        ccfile.write('[configcook]\nextends = "file1.toml"\nc = 3')
+        ccfile.write('[configcook]\nextends = ["file1.toml"]\nc = 3')
     assert parse_toml_config(file_path3) == {
         "configcook": {"a": 1, "b": 2, "c": 3, "extends": ["file1.toml", "file2.toml"]}
     }
@@ -157,6 +157,21 @@ def test_parse_toml_config_extends(tmp_path):
     }
 
 
+def test_parse_toml_config_non_list_extends(tmp_path):
+    from configcook.config import parse_toml_config
+
+    tempdir = str(tmp_path)
+    file_path1 = os.path.join(tempdir, "file1.toml")
+    # file 1 extends file 2, but as string instead of list
+    with open(file_path1, "w") as ccfile:
+        ccfile.write("[configcook]\nextends = 'file2.toml'\na = 1")
+    file_path2 = os.path.join(tempdir, "file2.toml")
+    with open(file_path2, "w") as ccfile:
+        ccfile.write("[configcook]\nb = 2")
+    with pytest.raises(ValueError):
+        parse_toml_config(file_path1)
+
+
 def test_parse_toml_config_plus_integer(tmp_path):
     from configcook.config import parse_toml_config
 
@@ -164,7 +179,7 @@ def test_parse_toml_config_plus_integer(tmp_path):
     file_path1 = os.path.join(tempdir, "file1.toml")
     # file 1 extends file 2
     with open(file_path1, "w") as ccfile:
-        ccfile.write('[configcook]\nextends = "file2.toml"\na = 1')
+        ccfile.write('[configcook]\nextends = ["file2.toml"]\na = 1')
     # file 2 adds to a value of file 1
     file_path2 = os.path.join(tempdir, "file2.toml")
     with open(file_path2, "w") as ccfile:
@@ -181,7 +196,7 @@ def test_parse_toml_config_plus_list(tmp_path):
     file_path1 = os.path.join(tempdir, "file1.toml")
     # file 1 extends file 2
     with open(file_path1, "w") as ccfile:
-        ccfile.write('[configcook]\nextends = "file2.toml"\na = ["one"]')
+        ccfile.write('[configcook]\nextends = ["file2.toml"]\na = ["one"]')
     # file 2 adds to a value of file 1
     file_path2 = os.path.join(tempdir, "file2.toml")
     with open(file_path2, "w") as ccfile:
@@ -198,7 +213,7 @@ def test_parse_toml_config_plus_string(tmp_path):
     file_path1 = os.path.join(tempdir, "file1.toml")
     # file 1 extends file 2
     with open(file_path1, "w") as ccfile:
-        ccfile.write('[configcook]\nextends = "file2.toml"\na = "one"')
+        ccfile.write('[configcook]\nextends = ["file2.toml"]\na = "one"')
     # file 2 adds to a value of file 1
     file_path2 = os.path.join(tempdir, "file2.toml")
     with open(file_path2, "w") as ccfile:

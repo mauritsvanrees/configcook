@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from .entrypoints import Entrypoint
-from .utils import to_list
 import logging
 import pdb
 
@@ -28,8 +27,8 @@ class PDBExtension(BaseExtension):
     """
 
     defaults = {
-        "before": {"default": [], "parser": to_list},
-        "after": {"default": [], "parser": to_list},
+        "before": {"default": [], "type": list},
+        "after": {"default": [], "type": list},
     }
 
     def __call__(self):

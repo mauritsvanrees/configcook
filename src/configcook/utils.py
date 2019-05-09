@@ -200,15 +200,6 @@ def to_bool(value):
     )
 
 
-def to_list(value):
-    """Turn a value into a list."""
-    if isinstance(value, list):
-        return value
-    if not isinstance(value, six.string_types):
-        raise ValueError("Must be text: {0!r}".format(value))
-    return value.strip().split()
-
-
 def to_path(value):
     """Turn a value into an absolute path."""
     if not isinstance(value, six.string_types):
@@ -224,7 +215,14 @@ def set_defaults(defaults, options):
 
     Both must be dictionaries.
     The values of defaults must be dictionaries like this:
-    {"default": "bin", "parser": to_path, "required": True},
+
+    {
+        "default": "bin",
+        "parser": to_path,
+        "required": True,
+        "type":, list,
+    }
+
     where none of the keys are mandatory.
 
     "required" means the key must be in the options,
@@ -259,4 +257,12 @@ def set_defaults(defaults, options):
                     key, orig_value, new_value
                 )
             )
+        if new_value is not None:
+            type_ = value.get("type")
+            if type_ and not isinstance(new_value, value.get("type")):
+                raise ValueError(
+                    "Option {0} must be of type {1}. Got type: {2} ({3}).".format(
+                        key, type_, type(new_value), new_value
+                    )
+                )
         options[key] = new_value

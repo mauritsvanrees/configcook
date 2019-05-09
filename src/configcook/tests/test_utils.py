@@ -34,19 +34,6 @@ def test_to_bool():
         to_bool(1)
 
 
-def test_to_list():
-    from configcook.utils import to_list
-
-    assert to_list("") == []
-    assert to_list("hello") == ["hello"]
-    assert to_list("hello world") == ["hello", "world"]
-    assert to_list("there\nand back again") == ["there", "and", "back", "again"]
-    assert to_list([]) == []
-    with pytest.raises(ValueError):
-        # Must be text or already a list, not even a tuple.
-        to_list(())
-
-
 def test_to_path_parent():
     from configcook.utils import to_path
 

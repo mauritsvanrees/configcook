@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from .exceptions import ConfigError
 from .utils import substitute
-from .utils import to_list
 from .utils import to_path
 from copy import deepcopy
 import os
@@ -56,8 +55,13 @@ def parse_toml_config(path):
     if cc:
         extends = cc.get("extends")
         if extends:
+            if not isinstance(extends, list):
+                raise ValueError(
+                    "Option extends must be of type list. Got type: {0} ({1}).".format(
+                        type(extends), extends
+                    )
+                )
             dirname = os.path.dirname(path)
-            cc["extends"] = to_list(extends)
             # Build a new extends line that gets the correct order
             # for nested extends.
             new_extends = []
