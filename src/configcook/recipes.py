@@ -3,10 +3,10 @@ from .entrypoints import Entrypoint
 from .utils import call_or_fail
 from .utils import entrypoint_function
 from .utils import substitute
-from .utils import to_lines
 from .utils import to_path
 import logging
 import os
+import six
 import sys
 
 
@@ -35,11 +35,14 @@ class CommandRecipe(BaseRecipe):
     """Basic configcook recipe that runs one or more commands.
     """
 
-    defaults = {"command": {"parser": to_lines, "required": True}}
+    defaults = {"command": {"required": True}}
 
     @entrypoint_function
     def install(self):
-        for command in self.options["command"]:
+        commands = self.options["command"]
+        if isinstance(commands, six.string_types):
+            commands = [commands]
+        for command in commands:
             if not command:
                 continue
             logger.debug("Calling command: %s", command)

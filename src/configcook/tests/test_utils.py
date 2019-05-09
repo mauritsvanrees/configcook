@@ -47,18 +47,6 @@ def test_to_list():
         to_list(())
 
 
-def test_to_lines():
-    from configcook.utils import to_lines
-
-    assert to_lines("") == []
-    assert to_lines("hello") == ["hello"]
-    assert to_lines("hello world") == ["hello world"]
-    assert to_lines("there\nand back again") == ["there", "and back again"]
-    with pytest.raises(ValueError):
-        # must be text
-        to_lines([])
-
-
 def test_to_path_parent():
     from configcook.utils import to_path
 

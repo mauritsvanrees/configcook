@@ -200,16 +200,6 @@ def to_bool(value):
     )
 
 
-def to_lines(value):
-    """Turn a value into a list of lines.
-
-    Difference with to_list is that to_lines can contain whitespace in a line.
-    """
-    if not isinstance(value, six.string_types):
-        raise ValueError("Must be text: {0!r}".format(value))
-    return value.strip().splitlines()
-
-
 def to_list(value):
     """Turn a value into a list."""
     if isinstance(value, list):
