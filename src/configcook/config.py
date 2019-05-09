@@ -38,6 +38,9 @@ class ConfigCookConfig(dict):
             if new_value == value:
                 continue
             section[key] = new_value
+            # TODO: do something with 'changed' value.
+            # I think my idea was to do this recursively, and then we can
+            # use this to know when we are done.
             changed = True
 
 
@@ -48,7 +51,6 @@ def parse_toml_config(path):
     TODO: support urls
     """
     path = to_path(path)
-    fpname = os.path.basename(path)
     with open(path) as fp:
         result = toml.load(fp)
     cc = result.get("configcook")

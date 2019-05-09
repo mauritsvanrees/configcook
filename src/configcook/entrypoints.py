@@ -2,7 +2,6 @@
 from .utils import entrypoint_function
 from .utils import set_defaults
 import logging
-import sys
 
 
 logger = logging.getLogger(__name__)

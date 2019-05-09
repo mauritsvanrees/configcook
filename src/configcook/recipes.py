@@ -5,9 +5,7 @@ from .utils import entrypoint_function
 from .utils import substitute
 from .utils import to_path
 import logging
-import os
 import six
-import sys
 
 
 logger = logging.getLogger(__name__)
