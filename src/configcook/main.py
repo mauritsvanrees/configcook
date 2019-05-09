@@ -30,7 +30,6 @@ DEFAULTS = {
     # 'eggs-directory': 'eggs',
     # 'executable': sys.executable,
     "extends": {"default": [], "type": list},
-    "fake-buildout": {"default": False, "type": bool},
     # 'find-links': '',
     # 'install-from-cache': 'false',
     # 'installed': '.installed.cfg',
@@ -322,12 +321,6 @@ class ConfigCook(object):
             ccc["base-directory"] = os.getcwd()
         else:
             ccc["base-directory"] = os.path.dirname(configfile)
-
-        # Maybe add buildout section as copy of configcook.
-        if ccc["fake-buildout"]:
-            # Make the configcook section available under the buildout name.
-            # This may improve compatibility between configcook and buildout.
-            self.config["buildout"] = ccc
 
         # Substitute ${part:name} in all options.
         self.config.substitute_all()
