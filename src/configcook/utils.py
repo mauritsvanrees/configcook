@@ -36,7 +36,9 @@ def substitute(config, text, current_part=""):
             )
         logger.debug("Substituting %r with %r", template, value)
         # TODO: call recursively if needed.
-        text = text.replace(template, value)
+        # value used to be a string, but can now be a list, boolean, etc.
+        # TODO We might need to keep that.
+        text = text.replace(template, "{0!r}".format(value))
     return text
 
 
