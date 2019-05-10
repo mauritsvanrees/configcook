@@ -121,12 +121,12 @@ def test_cli_main_no_packages(tmp_path, safe_sys_argv, safe_working_dir):
     contents = dedent(
         """
 [configcook]
-extensions = "configcook:extension_example"
+extensions = ["configcook:extension_example"]
 parts = ["test"]
 
 [test]
-recipe = "configcook:command"
-command = "echo Hello"
+recipe = "configcook:commands"
+commands = "echo Hello"
 """
     )
     str_path = str(tmp_path)

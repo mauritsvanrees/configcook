@@ -38,7 +38,9 @@ def substitute(config, text, current_part=""):
         # TODO: call recursively if needed.
         # value used to be a string, but can now be a list, boolean, etc.
         # TODO We might need to keep that.
-        text = text.replace(template, "{0!r}".format(value))
+        if not isinstance(value, six.string_types):
+            value = "{0!r}".format(value)
+        text = text.replace(template, value)
     return text
 
 
