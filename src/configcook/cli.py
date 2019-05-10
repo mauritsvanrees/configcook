@@ -3,10 +3,13 @@ from .main import ConfigCook
 from argparse import ArgumentParser
 
 import logging
+import os
 import sys
 
 
 logger = logging.getLogger(__name__)
+# Config files to try for existence, when not given on the command line.
+CONFIGFILE_DEFAULTS = ["cc.toml", "pyproject.toml"]
 
 
 def parse_options():
@@ -15,10 +18,10 @@ def parse_options():
     parser.add_argument(
         "-c",
         "--config",
-        # action="store_true",
         dest="configfile",
-        default="cc.cfg",
-        help="Config filename to load, if other than cc.cfg",
+        help="Config filename to load. If not given, falls back to the first of these in the current directory: {0}.".format(
+            ", ".join(CONFIGFILE_DEFAULTS)
+        ),
     )
     parser.add_argument(
         "-D",
@@ -45,6 +48,14 @@ def parse_options():
         help="Verbose mode",
     )
     options = parser.parse_args()
+    if not options.configfile:
+        for configfile in CONFIGFILE_DEFAULTS:
+            if os.path.exists(configfile):
+                options.configfile = configfile
+                break
+        if not options.configfile:
+            parser.print_help()
+            sys.exit(1)
     return options
 
 
