@@ -30,9 +30,9 @@ packages = [
 ]
 
 [cmd]
-recipe = "configcook:command"
-# command = ["ls -l"]
-command = """
+recipe = "configcook:commands"
+# commands = ["ls -l"]
+commands = """
     echo "This is a listing of the current directory:"
 
     ls

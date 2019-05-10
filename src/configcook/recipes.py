@@ -29,22 +29,22 @@ class BaseRecipe(Entrypoint):
 # We don't yet have a .installed.cfg.
 
 
-class CommandRecipe(BaseRecipe):
+class CommandsRecipe(BaseRecipe):
     """Basic configcook recipe that runs one or more commands.
     """
 
-    defaults = {"command": {"required": True}}
+    defaults = {"commands": {"required": True, "type": (list, six.string_types)}}
 
     @entrypoint_function
     def install(self):
-        commands = self.options["command"]
+        commands = self.options["commands"]
         if isinstance(commands, six.string_types):
-            commands = [commands]
+            commands = commands.splitlines()
         for command in commands:
+            command = command.split()
             if not command:
                 continue
             logger.debug("Calling command: %s", command)
-            command = command.split()
             call_or_fail(command)
 
 
