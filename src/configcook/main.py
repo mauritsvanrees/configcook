@@ -187,10 +187,16 @@ class ConfigCook(object):
         if "extensions" not in ccc:
             logger.debug("No extensions in config.")
             return
-        self._extension_names = self.config["configcook"]["extensions"].split()
+        self._extension_names = self.config["configcook"]["extensions"]
         logger.debug(
             "extensions in configcook section: %s", ", ".join(self._extension_names)
         )
+        if not isinstance(self._extension_names, list):
+            raise ConfigError(
+                "extensions must be a list, found a {0} ({1!r}).".format(
+                    type(self._extension_names), self._extension_names
+                )
+            )
         logger.debug("Loading extensions.")
         for name in self._extension_names:
             extension_class = self._load_extension(name)
